@@ -1,11 +1,11 @@
 # Peta Proyek (docs/PROJECT_MAP.md)
 
 ## 1. Ringkasan
-Aplikasi web pelaporan E-Ticket IT Helpdesk untuk karyawan mengirim tiket kendala dan tim IT memprosesnya. Stack: Node.js, Express, EJS, Bootstrap 5 (CDN), SQLite (better-sqlite3), bcrypt, express-session.
+Aplikasi web pelaporan E-Ticket IT Helpdesk untuk karyawan mengirim tiket kendala dan tim IT memprosesnya. Stack: Node.js, Express, EJS, Bootstrap 5 (CDN), SQLite (better-sqlite3), bcrypt, express-session, express-validator.
 
 ## 2. Cara Menjalankan
 1. Inisialisasi DB: `npm run db:migrate` (membuat tabel SQLite dari `db/migrations/*.sql`).
-2. Isi data awal: `npm run db:seed` (mengisi 3 user dan 5 kategori; aman dijalankan berulang).
+2. Isi data awal: `npm run db:seed` (mengisi 4 user dan 5 kategori; aman dijalankan berulang).
 3. Jalankan server dev: `npm run dev` (nodemon di `http://localhost:3000`).
 4. Jalankan server prod: `npm start` (`node app.js`).
 
@@ -21,19 +21,26 @@ Request HTTP -> `express.static('public')` -> `express.urlencoded` & `express.js
 - `db/connection.js`: Inisialisasi better-sqlite3 dari `DB_PATH` dengan `PRAGMA foreign_keys = ON`.
 - `db/migrations/001_init.sql`: Skema DDL 5 tabel (users, categories, tickets, ticket_comments, ticket_status_history).
 - `db/migrate.js`: Runner otomatis file migrasi SQL di folder `db/migrations/`.
-- `db/seed.js`: Seeder data 3 pengguna (hash bcrypt) dan 5 kategori default (idempotent).
+- `db/seed.js`: Seeder data 4 pengguna (hash bcrypt) dan 5 kategori default (idempotent).
 - `db/users.js`: Fungsi query tabel users (`findByEmail`, `findById`).
+- `db/categories.js`: Fungsi query kategori (`listAll`).
+- `db/tickets.js`: Fungsi transaksi pembuatan tiket kode `TKT-XXXX`, `listByUser`, `findByIdForUser`.
 - `middleware/auth.js`: Middleware otentikasi `requireLogin` dan otorisasi peran `requireRole`.
 - `routes/auth.js`: Endpoint login form, proses autentikasi akun, dan logout.
 - `routes/dashboard.js`: Endpoint halaman dashboard pengguna terotentikasi.
+- `routes/tickets.js`: Endpoint tiket karyawan (`/tickets`, `/tickets/new`, `/tickets/:id`).
 - `routes/admin.js`: Endpoint placeholder halaman khusus role admin (uji otorisasi).
 - `routes/README.md`: Catatan modul routing Express.
 - `views/index.ejs`: Halaman beranda publik.
 - `views/login.ejs`: Halaman formulir login akun.
 - `views/dashboard.ejs`: Halaman dashboard pengguna menampilkan identitas dan peran.
+- `views/tickets/index.ejs`: Halaman daftar tiket milik pengguna yang sedang login.
+- `views/tickets/new.ejs`: Formulir pembuatan tiket kendala baru karyawan.
+- `views/tickets/show.ejs`: Halaman detail informasi tiket milik karyawan.
 - `views/admin.ejs`: Halaman khusus admin.
 - `views/403.ejs`: Halaman error akses ditolak jika peran tidak berwenang.
-- `views/partials/header.ejs`: Komponen navbar (menyesuaikan status login user).
+- `views/404.ejs`: Halaman error tidak ditemukan (not found).
+- `views/partials/header.ejs`: Komponen navbar (menyesuaikan status login user dan role employee).
 - `views/partials/footer.ejs`: Komponen copyright footer.
 - `public/css/style.css`: Styling CSS kustom.
 - `public/js/main.js`: Script JS klien.
@@ -43,6 +50,7 @@ Request HTTP -> `express.static('public')` -> `express.urlencoded` & `express.js
 - `issue/01-server-layout.md`: Dokumentasi pengerjaan Tahap 01.
 - `issue/02-database.md`: Dokumentasi pengerjaan Tahap 02.
 - `issue/03-login-role.md`: Dokumentasi pengerjaan Tahap 03.
+- `issue/04-tiket-karyawan.md`: Dokumentasi pengerjaan Tahap 04.
 
 ## 5. Tabel Route
 | Method | Path | Akses | File |
@@ -52,6 +60,10 @@ Request HTTP -> `express.static('public')` -> `express.urlencoded` & `express.js
 | `POST` | `/login` | Publik (memverifikasi email & password) | `routes/auth.js` |
 | `POST` | `/logout` | Publik / Pengguna login | `routes/auth.js` |
 | `GET` | `/dashboard` | Login (`requireLogin`) | `routes/dashboard.js` |
+| `GET` | `/tickets` | Khusus Employee (`requireRole('employee')`) | `routes/tickets.js` |
+| `GET` | `/tickets/new` | Khusus Employee (`requireRole('employee')`) | `routes/tickets.js` |
+| `POST` | `/tickets` | Khusus Employee (`requireRole('employee')`) | `routes/tickets.js` |
+| `GET` | `/tickets/:id` | Khusus Employee pemilik tiket (`requireRole('employee')`) | `routes/tickets.js` |
 | `GET` | `/admin` | Khusus Admin (`requireRole('admin')`) | `routes/admin.js` |
 
 ## 6. Database (Tabel & Kolom Utama)
@@ -60,7 +72,7 @@ Request HTTP -> `express.static('public')` -> `express.urlencoded` & `express.js
 - `tickets`: `id` (PK), `kode` (UQ), `judul`, `deskripsi`, `category_id` (FK), `created_by` (FK), `assigned_to` (FK NULL), `prioritas` (Rendah/Sedang/Tinggi/Urgent), `status` (Baru/Diproses/Selesai/Ditutup), `created_at`, `updated_at`, `closed_at`.
 - `ticket_comments`: `id` (PK), `ticket_id` (FK CASCADE), `user_id` (FK), `isi`, `is_internal` (0/1), `created_at`.
 - `ticket_status_history`: `id` (PK), `ticket_id` (FK CASCADE), `status_lama`, `status_baru`, `diubah_oleh` (FK), `created_at`.
-- Akun seed: `budi@perusahaan.local` (employee), `siti@perusahaan.local` (helpdesk), `admin@perusahaan.local` (admin).
+- Akun seed: `budi@perusahaan.local` (employee 1), `dewi@perusahaan.local` (employee 2), `siti@perusahaan.local` (helpdesk), `admin@perusahaan.local` (admin).
 
 ## 7. Auth dan Session
 - Autentikasi mencocokkan hash via `bcrypt.compare`. Pesan error login generik: "Email atau password salah".
@@ -72,8 +84,8 @@ Request HTTP -> `express.static('public')` -> `express.urlencoded` & `express.js
 ## 8. Cara Menambah Fitur
 1. Query DB: Tambahkan file query baru di `db/*.js` menggunakan `db.prepare(...)` dari `db/connection.js`.
 2. Middleware: Buat logika proteksi rute di `middleware/*.js` jika diperlukan.
-3. Rute: Buat modul `routes/*.js`, pasang middleware, tangani request/response, lalu daftarkan via `app.use()` di `app.js`.
-4. Tampilan: Buat file `.ejs` di `views/` memanfaatkan partials (`header.ejs`, `footer.ejs`) dan komponen Bootstrap 5.
+3. Rute: Buat modul `routes/*.js`, pasang middleware dan validasi `express-validator`, tangani request/response, lalu daftarkan via `app.use()` di `app.js`.
+4. Tampilan: Buat file `.ejs` di `views/` memanfaatkan partials (`header.ejs`, `footer.ejs`), escaping `<%= %>`, dan komponen Bootstrap 5.
 
 ## 9. Konvensi
 - Tanpa ORM; query SQL diletakkan secara terisolasi di folder `db/`.
@@ -81,19 +93,21 @@ Request HTTP -> `express.static('public')` -> `express.urlencoded` & `express.js
 - Password wajib di-hash menggunakan `bcrypt`.
 - Agent dilarang menjalankan perintah git.
 - Kode ditulis sederhana dengan komentar berbahasa Indonesia untuk pemula.
+- Semua data masukan pengguna wajib di-escape dengan `<%= %>` pada view.
 
 ## 10. Status Tahap
 - Tahap 00 (Setup repo): Selesai.
 - Tahap 01 (Server layout & beranda): Selesai.
 - Tahap 02 (Database SQLite & migrasi/seed): Selesai.
 - Tahap 03 (Login, logout, session, role): Selesai.
-- **Tahap 04 (Tiket Karyawan)**: Berikutnya.
+- Tahap 04 (Tiket Karyawan): Selesai.
+- **Tahap 05 (Alur Proses Helpdesk & Status)**: Berikutnya.
 
 ## 11. Belum Ada
-- Form dan endpoint pembuatan tiket oleh karyawan (`/tickets/new`).
-- Halaman daftar riwayat tiket milik karyawan (`/tickets`).
-- Alur helpdesk memproses tiket (ambil tiket, ubah status tiket).
+- Alur helpdesk memproses tiket (ambil tiket, ubah status tiket dari Baru -> Diproses -> Selesai -> Ditutup).
 - Komentar tiket dan catatan internal helpdesk.
 - Manajemen pengguna dan kategori oleh admin (CRUD).
 - Visualisasi dashboard pelaporan analitik (Chart.js).
+- Filter, pencarian, dan paginasi tiket.
+- Upload lampiran file dokumen/gambar.
 - Proteksi CSRF token & rate limiter endpoint auth.

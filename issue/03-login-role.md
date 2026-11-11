@@ -1,5 +1,5 @@
 # Tahap 03: Login, Logout, Session, dan Proteksi Role
-Status: Sedang dikerjakan
+Status: Selesai
 Branch: tahap-03-login-role
 Prasyarat: Tahap 02: Database SQLite
 
@@ -57,15 +57,15 @@ Memungkinkan pengguna masuk (login) menggunakan email dan password data seed, se
 
 ## Checklist tugas
 - [x] Buat file issue `issue/03-login-role.md`
-- [ ] Catat ide di luar cakupan ke `issue/BACKLOG.md`
-- [ ] Buat helper query database `db/users.js` (`findByEmail`, `findById`)
-- [ ] Buat middleware `middleware/auth.js` (`requireLogin`, `requireRole`)
-- [ ] Buat rute `routes/auth.js` dan tampilan `views/login.ejs`
-- [ ] Buat rute `routes/dashboard.js` dan tampilan `views/dashboard.ejs`
-- [ ] Buat rute `routes/admin.js`, `views/admin.ejs`, dan `views/403.ejs`
-- [ ] Integrasikan session, middleware `res.locals.user`, dan routing di `app.js`
-- [ ] Perbarui `views/partials/header.ejs` dengan navigasi login/logout
-- [ ] Verifikasi tes manual 3 akun seed dan proteksi role
+- [x] Catat ide di luar cakupan ke `issue/BACKLOG.md`
+- [x] Buat helper query database `db/users.js` (`findByEmail`, `findById`)
+- [x] Buat middleware `middleware/auth.js` (`requireLogin`, `requireRole`)
+- [x] Buat rute `routes/auth.js` dan tampilan `views/login.ejs`
+- [x] Buat rute `routes/dashboard.js` dan tampilan `views/dashboard.ejs`
+- [x] Buat rute `routes/admin.js`, `views/admin.ejs`, dan `views/403.ejs`
+- [x] Integrasikan session, middleware `res.locals.user`, dan routing di `app.js`
+- [x] Perbarui `views/partials/header.ejs` dengan navigasi login/logout
+- [x] Verifikasi tes manual 3 akun seed dan proteksi role
 
 ## Cara tes manual
 1. Jalankan `npm run dev` atau `node app.js`.
@@ -91,8 +91,29 @@ Memungkinkan pengguna masuk (login) menggunakan email dan password data seed, se
 - `password_hash` tidak pernah tampil di halaman mana pun.
 
 ## Catatan hasil (file diubah, pesan commit, masalah)
-*(Akan diisi setelah konfirmasi selesai)*
+- **File dibuat/diubah**:
+  - `issue/03-login-role.md`
+  - `issue/BACKLOG.md`
+  - `db/users.js`
+  - `middleware/auth.js`
+  - `routes/auth.js`
+  - `routes/dashboard.js`
+  - `routes/admin.js`
+  - `views/login.ejs`
+  - `views/dashboard.ejs`
+  - `views/admin.ejs`
+  - `views/403.ejs`
+  - `app.js`
+  - `views/partials/header.ejs`
+  - `docs/PROJECT_MAP.md`
+- **Pesan commit yang disarankan**:
+  `feat(auth): implementasi login logout session dan proteksi role middleware`
+- **Masalah & Solusi**: Tidak ada kendala teknis. Verifikasi komparasi bcrypt dan penanganan cookie session (httpOnly, sameSite lax, regenerate session id) berjalan sesuai protokol keamanan.
 
 ## Evaluasi (yang baik, yang sulit, bug, ide ke BACKLOG, waktu pengerjaan)
-*(Akan diisi setelah konfirmasi selesai)*
+- **Yang baik**: Alur autentikasi dan proteksi peran modular dan terpisah rapi (query di `db/users.js`, otorisasi di `middleware/auth.js`, presentation di EJS). Pesan error login generik mencegah kebocoran informasi user enumeration.
+- **Yang sulit**: Tidak ada hambatan berarti.
+- **Bug**: Tidak ditemukan bug selama pengujian otomatis rute dan peran.
+- **Ide ke BACKLOG**: Proteksi CSRF token, rate limiter login endpoint, dan session store SQLite.
+- **Waktu pengerjaan**: ~15 menit.
 

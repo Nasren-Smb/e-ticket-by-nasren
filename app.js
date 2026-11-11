@@ -3,10 +3,11 @@ const express = require('express');
 const session = require('express-session');
 const path = require('path');
 
-// Inisialisasi rute
+// Inisialisasi modul rute
 const authRoutes = require('./routes/auth');
 const dashboardRoutes = require('./routes/dashboard');
 const adminRoutes = require('./routes/admin');
+const ticketRoutes = require('./routes/tickets');
 
 // Inisialisasi aplikasi Express
 const app = express();
@@ -55,6 +56,7 @@ app.get('/', (req, res) => {
 app.use(authRoutes);
 app.use(dashboardRoutes);
 app.use(adminRoutes);
+app.use(ticketRoutes);
 
 // Jalankan server
 app.listen(PORT, () => {
