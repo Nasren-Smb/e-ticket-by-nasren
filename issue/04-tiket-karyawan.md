@@ -99,25 +99,23 @@ Karyawan (`employee`) dapat membuat tiket kendala baru, melihat daftar tiket mil
 
 ## Catatan hasil (file diubah, pesan commit, masalah)
 - **File dibuat/diubah**:
-  - `issue/04-tiket-karyawan.md`
-  - `db/categories.js`
-  - `db/tickets.js`
-  - `routes/tickets.js`
-  - `views/tickets/index.ejs`
-  - `views/tickets/new.ejs`
-  - `views/tickets/show.ejs`
-  - `views/404.ejs`
-  - `views/partials/header.ejs`
-  - `app.js`
-  - `db/seed.js`
-  - `docs/PROJECT_MAP.md`
+  - `db/categories.js` (dibuat)
+  - `db/tickets.js` (dibuat)
+  - `routes/tickets.js` (dibuat)
+  - `views/tickets/index.ejs` (dibuat)
+  - `views/tickets/new.ejs` (dibuat)
+  - `views/tickets/show.ejs` (dibuat)
+  - `views/404.ejs` (dibuat)
+  - `app.js` (diubah)
+  - `views/partials/header.ejs` (diubah)
+  - `db/seed.js` (diubah)
+  - `docs/PROJECT_MAP.md` (diubah)
+  - `issue/04-tiket-karyawan.md` (dibuat)
+  - `issue/README.md` (diubah)
 - **Pesan commit yang disarankan**:
   `feat(tickets): implementasi pembuatan dan daftar tiket untuk peran employee`
-- **Masalah & Solusi**: Tidak ada kendala teknis. Transaksi penomoran kode tiket `TKT-XXXX` berjalan konsisten, escaping data via `<%= %>` mencegah eksekusi XSS, dan penolakan tiket user lain dengan 404 berjalan sesuai spesifikasi keamanan.
+- **Masalah & Solusi**:
+  Penomoran kode tiket otomatis `TKT-XXXX` dibungkus dalam `db.transaction()` agar nomor urut terjamin unik dan tidak tumpang tindih. Penggunaan status HTTP 404 pada tiket orang lain mencegah kebocoran informasi (IDOR). Seluruh output data pengguna ditampilkan menggunakan `<%= %>` agar karakter berbahaya otomatis ter-escape dari XSS.
 
 ## Evaluasi (yang baik, yang sulit, bug, ide ke BACKLOG, waktu pengerjaan)
-- **Yang baik**: Alur isolasi tiket berbasis query `WHERE id = ? AND created_by = ?` sangat aman dari kebocoran data (IDOR), penomoran tiket rapi dalam transaksi database, dan validasi form informatif.
-- **Yang sulit**: Tidak ada.
-- **Bug**: Tidak ditemukan bug.
-- **Ide ke BACKLOG**: Fitur upload file lampiran kendala dan pencarian pada daftar tiket.
-- **Waktu pengerjaan**: ~15 menit.
+*(Akan diisi oleh pengguna)*

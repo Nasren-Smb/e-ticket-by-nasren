@@ -1,11 +1,16 @@
 # Panduan Agent (AGENTS.md)
 
-Dokumen ini adalah acuan kerja utama bagi AI Agent dalam mengembangkan proyek E-Ticket IT Helpdesk.
+## UNTUK AI BARU (Wajib Dibaca Pertama Kali)
+1. **Urutan Membaca**: Baca `AGENTS.md` -> `docs/PROJECT_MAP.md` -> file issue tahap berikutnya di folder `issue/` (selalu periksa `issue/README.md` untuk mengetahui tahap aktif yang sedang berjalan).
+2. **Jangan Membaca Seluruh Repo**: BACA HANYA file yang diizinkan pada bagian "File yang BOLEH dibaca" di file issue tahap aktif. Jika membutuhkan file lain di luar izin, sebutkan nama file beserta alasannya secara eksplisit, lalu tanyakan kepada pengguna terlebih dahulu.
+3. **Jangan Mendahului**: Dilarang memulai pengerjaan atau menulis kode untuk tahap berikutnya sebelum diminta secara jelas oleh pengguna.
+
+---
 
 ## Ringkasan Proyek
 - **Aplikasi**: Web Report E-Ticket IT Helpdesk (proyek belajar web pemula, semua tools gratis).
-- **Tech Stack**: Node.js, Express, EJS, Bootstrap 5, SQLite (better-sqlite3), dotenv, bcrypt.
-- **Rencana Tambahan**: express-validator, express-session, Chart.js.
+- **Tech Stack**: Node.js, Express, EJS, Bootstrap 5 (CDN), SQLite (better-sqlite3), dotenv, bcrypt, express-session, express-validator.
+- **Rencana Tambahan**: Chart.js.
 - **Peran Pengguna**:
   - `employee` (karyawan): membuat tiket, melihat tiket miliknya, membalas komentar.
   - `helpdesk`: melihat semua tiket, memproses tiket, mengubah status, catatan internal.
@@ -28,6 +33,7 @@ Dokumen ini adalah acuan kerja utama bagi AI Agent dalam mengembangkan proyek E-
 - Password wajib di-hash dengan `bcrypt`.
 - Nilai rahasia disimpan di `.env` (gunakan `.env.example` sebagai acuan).
 - Tulis kode sederhana dengan komentar singkat berbahasa Indonesia untuk pemula.
+- Semua data pengguna yang dirender ke tampilan wajib di-escape dengan `<%= %>` untuk mencegah XSS.
 - Jika ada hal yang tidak jelas: tanyakan kepada user, jangan menebak.
 - Ide atau fitur di luar cakupan tahap aktif dicatat di `issue/BACKLOG.md`.
 
@@ -39,6 +45,13 @@ Dokumen ini adalah acuan kerja utama bagi AI Agent dalam mengembangkan proyek E-
 ## Prosedur Selesai Pengerjaan
 1. Berikan ringkasan singkat: (1) file dibuat/diubah, (2) langkah tes manual, (3) saran pesan commit (hanya teks).
 2. **Berhenti** dan tunggu konfirmasi user.
-3. Setelah dikonfirmasi user: centang checklist tugas, isi Catatan hasil & Evaluasi, ubah Status jadi `Selesai`, serta perbarui `issue/README.md` dan `docs/PROJECT_MAP.md`.
+3. Setelah dikonfirmasi user: centang checklist tugas, isi Catatan hasil, ubah Status jadi `Selesai`, serta perbarui `issue/README.md` dan `docs/PROJECT_MAP.md`. Biarkan bagian Evaluasi diisi oleh user jika diminta.
 4. Jangan ubah file issue untuk tahap yang sudah berstatus `Selesai`.
 
+---
+
+## CATATAN LINGKUNGAN
+- **Sistem Operasi**: Windows (menggunakan shell PowerShell). Berikan perintah atau path yang kompatibel dengan PowerShell.
+- **Port Server & Proses**: Server development menggunakan port 3000. DILARANG membiarkan server dev berjalan terus di latar belakang (background) setelah selesai tes; selalu hentikan proses setelah pengujian selesai untuk mencegah bentrok port (`EADDRINUSE`).
+- **Operasi Git**: Seluruh perintah Git dikerjakan manual oleh pengguna. Agent dilarang mengeksekusi git CLI dan hanya menyarankan teks commit message.
+- **Audiens**: Pengguna sedang belajar web development pemula. Berikan penjelasan yang ringkas dan jelas, kode yang terstruktur rapi, serta komentar penjelas berbahasa Indonesia yang mudah dipahami.
