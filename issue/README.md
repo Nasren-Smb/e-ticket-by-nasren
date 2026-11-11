@@ -3,8 +3,8 @@
 | Tahap | Nama Tahapan | Status | File Issue |
 |---|---|---|---|
 | 00 | Setup repo & fondasi awal | Selesai | [00-setup-repo.md](00-setup-repo.md) |
-| 01 | Setup Database & Migration | Belum dimulai | - |
-| 02 | Otentikasi & Pengguna | Belum dimulai | - |
+| 01 | Server layout & halaman beranda | Selesai | [01-server-layout.md](01-server-layout.md) |
+| 02 | Database SQLite | Selesai | [02-database.md](02-database.md) |
 | 03 | Manajemen Pengguna & Kategori (Admin) | Belum dimulai | - |
 | 04 | Tiket Karyawan (Buat & Lihat Tiket) | Belum dimulai | - |
 | 05 | Alur Proses Helpdesk & Status | Belum dimulai | - |
