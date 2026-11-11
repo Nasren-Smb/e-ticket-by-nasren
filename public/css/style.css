@@ -1,0 +1,17 @@
+/* Custom styles untuk E-Ticket IT Helpdesk */
+body {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background-color: #f8f9fa;
+}
+
+main {
+  flex: 1;
+}
+
+.footer {
+  background-color: #ffffff;
+  border-top: 1px solid #dee2e6;
+}
+
