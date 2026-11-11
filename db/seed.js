@@ -44,6 +44,13 @@ try {
       role: 'employee'
     },
     {
+      nama: 'Dewi Karyawan',
+      email: 'dewi@perusahaan.local',
+      password_hash: passwordHash,
+      divisi: 'Pemasaran',
+      role: 'employee'
+    },
+    {
       nama: 'Siti Helpdesk',
       email: 'siti@perusahaan.local',
       password_hash: passwordHash,
@@ -78,4 +85,3 @@ try {
   console.error('Gagal menjalankan seeder:', error.message);
   process.exit(1);
 }
-
