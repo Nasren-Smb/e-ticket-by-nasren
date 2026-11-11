@@ -1,5 +1,5 @@
 # Tahap 02: Database SQLite
-Status: Sedang dikerjakan
+Status: Selesai
 Branch: tahap-02-database
 Prasyarat: Tahap 01: Server layout & halaman beranda
 
@@ -37,15 +37,15 @@ Membuat database SQLite dengan 5 tabel relasional melalui skrip migrasi, serta m
 
 ## Checklist tugas
 - [x] Buat file issue `issue/02-database.md`
-- [ ] Verifikasi instalasi `better-sqlite3` dan `bcrypt`
-- [ ] Pastikan `DB_PATH=./db/eticket.db` ada di `.env.example` dan `.env`
-- [ ] Buat `db/connection.js` dengan `PRAGMA foreign_keys = ON`
-- [ ] Buat `db/migrations/001_init.sql` untuk 5 tabel sesuai skema spesifikasi
-- [ ] Buat `db/migrate.js` membaca dan mengeksekusi semua file `.sql` di `db/migrations/`
-- [ ] Buat `db/seed.js` meng-hash password dan mengisi 3 user serta 5 kategori (idempotent / tidak duplikat)
-- [ ] Tambahkan scripts `db:migrate` dan `db:seed` di `package.json`
-- [ ] Jalankan `npm run db:migrate` dan `npm run db:seed`
-- [ ] Verifikasi data di SQLite
+- [x] Verifikasi instalasi `better-sqlite3` dan `bcrypt`
+- [x] Pastikan `DB_PATH=./db/eticket.db` ada di `.env.example` dan `.env`
+- [x] Buat `db/connection.js` dengan `PRAGMA foreign_keys = ON`
+- [x] Buat `db/migrations/001_init.sql` untuk 5 tabel sesuai skema spesifikasi
+- [x] Buat `db/migrate.js` membaca dan mengeksekusi semua file `.sql` di `db/migrations/`
+- [x] Buat `db/seed.js` meng-hash password dan mengisi 3 user serta 5 kategori (idempotent / tidak duplikat)
+- [x] Tambahkan scripts `db:migrate` dan `db:seed` di `package.json`
+- [x] Jalankan `npm run db:migrate` dan `npm run db:seed`
+- [x] Verifikasi data di SQLite
 
 ## Cara tes manual
 1. Jalankan migrasi: `npm run db:migrate`
@@ -59,7 +59,21 @@ Membuat database SQLite dengan 5 tabel relasional melalui skrip migrasi, serta m
 - `npm run dev` tetap berjalan normal seperti sebelumnya.
 
 ## Catatan hasil (file diubah, pesan commit, masalah)
-*(Akan diisi setelah konfirmasi selesai)*
+- **File dibuat/diubah**:
+  - `issue/02-database.md` (dokumen pelacakan tugas)
+  - `package.json` (menambahkan scripts `db:migrate` dan `db:seed`)
+  - `db/connection.js` (koneksi database SQLite dengan penegakan foreign keys)
+  - `db/migrations/001_init.sql` (skema DDL 5 tabel: users, categories, tickets, ticket_comments, ticket_status_history)
+  - `db/migrate.js` (skrip migrasi)
+  - `db/seed.js` (skrip seeder dengan hashing password via bcrypt)
+  - `db/README.md` (dihapus/dibersihkan)
+- **Pesan commit yang disarankan**:
+  `feat(db): setup koneksi sqlite, skema migrasi 5 tabel, dan seeder data awal`
+- **Masalah & Solusi**: Tidak ada kendala. Skema menggunakan DDL SQL standar dengan `CREATE TABLE IF NOT EXISTS` dan seeder menggunakan `INSERT OR IGNORE` sehingga aman dijalankan berulang.
 
 ## Evaluasi (yang baik, yang sulit, bug, ide ke BACKLOG, waktu pengerjaan)
-*(Akan diisi setelah konfirmasi selesai)*
+- **Yang baik**: Skema dirancang dengan integritas data yang ketat (CHECK constraints dan Foreign Key cascades/restricts), idempotent seeder menjamin data tidak terduplikasi saat dijalankan ulang, hashing password bcrypt berjalan mulus.
+- **Yang sulit**: Tidak ada kesulitan berarti, seluruh skrip sederhana dan mudah dipahami pemula.
+- **Bug**: Tidak ditemukan bug.
+- **Ide ke BACKLOG**: Penambahan rollback migration (`down.sql`) jika sewaktu-waktu dibutuhkan perombakan skema.
+- **Waktu pengerjaan**: ~10 menit.
