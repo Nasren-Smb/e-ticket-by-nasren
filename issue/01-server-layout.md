@@ -38,3 +38,4 @@ Menyiapkan server Express, konfigurasi view engine EJS, layout dasar menggunakan
 
 ## Evaluasi (yang baik, yang sulit, bug, ide ke BACKLOG, waktu pengerjaan)
 *(Akan diisi setelah konfirmasi selesai)*
+
