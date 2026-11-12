@@ -27,11 +27,12 @@ Request HTTP -> `express.static('public')` -> `express.urlencoded` & `express.js
 - `db/categories.js`: Helper query tabel categories (`listAll`).
 - `db/tickets.js`: Helper query tiket (`ALLOWED_TRANSITIONS`, `createTicket`, `listByUser`, `findByIdForUser`, `listAll`, `findById`, `assignToUser`, `changeStatus`).
 - `db/ticketHistory.js`: Helper query riwayat perubahan status tiket (`listByTicket`).
+- `db/comments.js`: Helper query komentar tiket (`listPublicByTicket`, `listAllByTicket`, `create`).
 - `middleware/auth.js`: Middleware otentikasi `requireLogin` dan otorisasi peran `requireRole`.
 - `routes/auth.js`: Endpoint login form, autentikasi akun, dan logout (`/login`, `/logout`).
 - `routes/dashboard.js`: Endpoint halaman dashboard pengguna terotentikasi (`/dashboard`).
-- `routes/tickets.js`: Endpoint tiket karyawan (`GET /tickets`, `GET /tickets/new`, `POST /tickets`, `GET /tickets/:id`).
-- `routes/helpdesk.js`: Endpoint tiket helpdesk (`GET /helpdesk/tickets`, `GET /helpdesk/tickets/:id`, `POST /helpdesk/tickets/:id/assign`, `POST /helpdesk/tickets/:id/status`).
+- `routes/tickets.js`: Endpoint tiket karyawan (`GET /tickets`, `GET /tickets/new`, `POST /tickets`, `GET /tickets/:id`, `POST /tickets/:id/comments`).
+- `routes/helpdesk.js`: Endpoint tiket helpdesk (`GET /helpdesk/tickets`, `GET /helpdesk/tickets/:id`, `POST /helpdesk/tickets/:id/assign`, `POST /helpdesk/tickets/:id/status`, `POST /helpdesk/tickets/:id/comments`).
 - `routes/admin.js`: Endpoint placeholder halaman khusus role admin (`/admin`).
 - `routes/README.md`: Catatan modul routing Express.
 - `views/index.ejs`: Halaman beranda publik.
@@ -39,9 +40,9 @@ Request HTTP -> `express.static('public')` -> `express.urlencoded` & `express.js
 - `views/dashboard.ejs`: Halaman dashboard pengguna menampilkan nama dan role.
 - `views/tickets/index.ejs`: Halaman daftar tiket milik pengguna yang sedang login.
 - `views/tickets/new.ejs`: Formulir pembuatan tiket kendala baru karyawan.
-- `views/tickets/show.ejs`: Halaman detail informasi tiket milik karyawan.
+- `views/tickets/show.ejs`: Halaman detail informasi tiket milik karyawan dan percakapan komentar publik.
 - `views/helpdesk/index.ejs`: Halaman antrean semua tiket untuk petugas helpdesk (filter status & pencarian q).
-- `views/helpdesk/show.ejs`: Halaman detail tiket helpdesk, tombol ambil tiket, form ubah status, dan riwayat status.
+- `views/helpdesk/show.ejs`: Halaman detail tiket helpdesk, tombol ambil tiket, form ubah status, riwayat status, dan catatan internal.
 - `views/admin.ejs`: Halaman khusus admin (placeholder pengujian role).
 - `views/403.ejs`: Halaman error akses ditolak jika peran tidak berwenang.
 - `views/404.ejs`: Halaman error tidak ditemukan (not found).
@@ -57,6 +58,7 @@ Request HTTP -> `express.static('public')` -> `express.urlencoded` & `express.js
 - `issue/03-login-role.md`: Dokumentasi pengerjaan Tahap 03.
 - `issue/04-tiket-karyawan.md`: Dokumentasi pengerjaan Tahap 04.
 - `issue/05-helpdesk-tiket.md`: Dokumentasi pengerjaan Tahap 05.
+- `issue/06-komentar.md`: Dokumentasi pengerjaan Tahap 06.
 
 ## 5. Tabel Route
 | Method | Path | Akses | File |
@@ -70,13 +72,15 @@ Request HTTP -> `express.static('public')` -> `express.urlencoded` & `express.js
 | `GET` | `/tickets/new` | Khusus Employee (`requireRole('employee')`) | `routes/tickets.js` |
 | `POST` | `/tickets` | Khusus Employee (`requireRole('employee')`) | `routes/tickets.js` |
 | `GET` | `/tickets/:id` | Khusus Employee pemilik tiket (`requireRole('employee')`) | `routes/tickets.js` |
+| `POST` | `/tickets/:id/comments` | Khusus Employee pemilik tiket (`requireRole('employee')`) | `routes/tickets.js` |
 | `GET` | `/helpdesk/tickets` | Khusus Helpdesk (`requireRole('helpdesk')`) | `routes/helpdesk.js` |
 | `GET` | `/helpdesk/tickets/:id` | Khusus Helpdesk (`requireRole('helpdesk')`) | `routes/helpdesk.js` |
 | `POST` | `/helpdesk/tickets/:id/assign` | Khusus Helpdesk (`requireRole('helpdesk')`) | `routes/helpdesk.js` |
 | `POST` | `/helpdesk/tickets/:id/status` | Khusus Helpdesk (`requireRole('helpdesk')`) | `routes/helpdesk.js` |
+| `POST` | `/helpdesk/tickets/:id/comments` | Khusus Helpdesk (`requireRole('helpdesk')`) | `routes/helpdesk.js` |
 | `GET` | `/admin` | Khusus Admin (`requireRole('admin')`) | `routes/admin.js` |
 
-## 6. Database
+## 6. Database & Query Aktif
 - **Ringkasan 5 Tabel**:
   - `users`: `id` (PK), `nama`, `email` (UQ), `password_hash`, `divisi`, `role` (employee/helpdesk/admin), `created_at`.
   - `categories`: `id` (PK), `nama` (UQ).
@@ -84,42 +88,47 @@ Request HTTP -> `express.static('public')` -> `express.urlencoded` & `express.js
   - `ticket_comments`: `id` (PK), `ticket_id` (FK CASCADE), `user_id` (FK), `isi`, `is_internal` (0/1), `created_at`.
   - `ticket_status_history`: `id` (PK), `ticket_id` (FK CASCADE), `status_lama`, `status_baru`, `diubah_oleh` (FK), `created_at`.
 - **Fungsi Query per File di `db/`**:
-  - `db/categories.js`:
-    - `listAll()`: mengambil semua kategori terurut berdasarkan nama secara alfabetis.
+  - `db/categories.js`: `listAll()`.
   - `db/tickets.js`:
-    - `createTicket(data)`: transaksi DB (`db.transaction`) membuat tiket baru. Menghitung nomor urut dari ID terakhir, menghasilkan format kode `TKT-XXXX` (misal: `TKT-0001`, `TKT-0002`), status otomatis 'Baru', dan `assigned_to` NULL.
-    - `listByUser(userId)`: mengambil seluruh tiket milik karyawan login join tabel categories.
-    - `findByIdForUser(id, userId)`: mengambil detail tiket dengan filter keamanan `WHERE id = ? AND created_by = ?`.
-    - `listAll({ status, q })`: mengambil semua tiket join categories, pembuat (users), dan petugas (users); mendukung filter status dan pencarian kode/judul (LIKE parameter binding); LIMIT 200.
-    - `findById(id)`: mengambil detail satu tiket lengkap beserta informasi pelapor dan petugas untuk helpdesk.
-    - `assignToUser(id, userId)`: transaksi DB mengambil tiket (hanya jika `assigned_to IS NULL` dan `status = 'Baru'`), mengubah status ke 'Diproses', dan mencatat baris baru ke `ticket_status_history`.
-    - `changeStatus(id, newStatus, userId)`: transaksi DB memvalidasi bahwa petugas tiket adalah user login dan status baru valid sesuai `ALLOWED_TRANSITIONS`, memperbarui status (serta mengisi `closed_at` saat status 'Ditutup'), dan mencatat ke `ticket_status_history`.
-  - `db/ticketHistory.js`:
-    - `listByTicket(ticketId)`: mengambil riwayat status tiket join tabel users terurut waktu naik (ASC).
-  - `db/users.js`:
-    - `findByEmail(email)`: mencari akun pengguna berdasarkan email untuk proses autentikasi login.
-    - `findById(id)`: mengambil data profil pengguna berdasarkan ID (tanpa password_hash).
-
-## 7. Aturan Transisi Status & Aturan Ambil Tiket
-- **Aturan Ambil Tiket (`assignToUser`)**:
-  - Hanya dapat diambil jika status saat ini `'Baru'` dan `assigned_to IS NULL`.
-  - Dijalankan dalam satu transaksi atomik; jika baris terupdate $\neq 1$, transaksi dibatalkan (tiket sudah diambil orang lain).
-  - Jika sukses, status berubah menjadi `'Diproses'` dan riwayat tercatat (`Baru` -> `Diproses`).
+    - `createTicket(data)`: transaksi DB penomoran kode `TKT-XXXX` (4 digit urut dari ID terakhir), status default 'Baru', `assigned_to` NULL.
+    - `listByUser(userId)`: mengambil seluruh tiket milik karyawan login.
+    - `findByIdForUser(id, userId)`: detail tiket milik user login (`WHERE id = ? AND created_by = ?`).
+    - `listAll({ status, q })`: mengambil semua tiket; filter status dan pencarian kode/judul via LIKE parameter binding; LIMIT 200.
+    - `findById(id)`: detail tiket lengkap untuk helpdesk.
+    - `assignToUser(id, userId)`: transaksi DB mengambil tiket (`assigned_to IS NULL` & `status = 'Baru'`), set status 'Diproses', insert `ticket_status_history`.
+    - `changeStatus(id, newStatus, userId)`: transaksi DB validasi petugas tiket & `ALLOWED_TRANSITIONS`, update status (set `closed_at` saat 'Ditutup'), insert `ticket_status_history`.
+  - `db/ticketHistory.js`: `listByTicket(ticketId)`: riwayat status join users terurut waktu naik (ASC).
+  - `db/comments.js`:
+    - `listPublicByTicket(ticketId)`: mengambil komentar dengan `is_internal = 0` join nama & role users, urut waktu naik.
+    - `listAllByTicket(ticketId)`: mengambil semua komentar (publik & internal) join nama & role users, urut waktu naik.
+    - `create({ ticketId, userId, isi, isInternal })`: insert komentar baru ke `ticket_comments` dengan `CURRENT_TIMESTAMP`.
+  - `db/users.js`: `findByEmail(email)`, `findById(id)`.
 - **Aturan Transisi Status (`ALLOWED_TRANSITIONS`)**:
   - `Baru` -> `['Diproses']`
   - `Diproses` -> `['Selesai']`
   - `Selesai` -> `['Ditutup', 'Diproses']`
-  - `Ditutup` -> `[]` (status final, tidak dapat diubah lagi)
-  - Hanya petugas penanggung jawab tiket (`assigned_to === user.id`) yang dapat mengubah status.
+  - `Ditutup` -> `[]`
+- **Aturan Ambil Tiket (`assignToUser`)**:
+  - Hanya dapat diambil jika status saat ini `'Baru'` dan `assigned_to IS NULL`.
+- **Aturan Catatan Internal**:
+  - Catatan internal (`is_internal = 1`) hanya dimuat melalui `listAllByTicket` di rute helpdesk dan TIDAK PERNAH dikirim ke rute employee (dicegah langsung di query database via `listPublicByTicket`).
 
-## 8. Pola Keamanan
-- **Isolasi Tiket di Query**: Detail tiket karyawan memfilter `WHERE id = ? AND created_by = ?`.
-- **404 untuk Tiket Orang Lain**: Upaya membuka tiket yang bukan miliknya menghasilkan respons `404 Not Found` (bukan 403) agar nomor tiket orang lain tidak bocor (mencegah IDOR).
-- **Validasi Input**: Validasi ketat via `express-validator` pada `routes/tickets.js` dan `routes/helpdesk.js` (panjang karakter, whitelist status, opsi prioritas).
-- **Output Ter-escape**: Semua data dinamis pengguna ditampilkan menggunakan sintaks `<%= %>` pada view EJS guna mencegah XSS.
-- **userId dari Session**: Nilai `created_by`, `assigned_to`, dan `diubah_oleh` selalu diambil dari `req.session.user.id`, tidak pernah mempercayai input form/body.
-- **Autentikasi & Session**: Password di-hash dengan `bcrypt`. Cookie session menggunakan `httpOnly: true`, `sameSite: 'lax'`, `secure: production`. Session diregenerate saat login sukses.
-- **Flash Message**: Notifikasi aksi satu kali baca via `req.session.flash` yang otomatis dihapus setelah dipindahkan ke `res.locals.flash`.
+## 7. Pola Keamanan
+- **Isolasi Tiket & Komentar di Query**:
+  - Detail tiket karyawan: `WHERE id = ? AND created_by = ?`.
+  - Komentar karyawan: `WHERE ticket_id = ? AND is_internal = 0`.
+- **404 untuk Tiket Orang Lain**: Mengakses atau berkomentar pada tiket orang lain menghasilkan respon `404 Not Found` (mencegah IDOR).
+- **Penolakan Tiket Ditutup**: Tiket berstatus 'Ditutup' dicegah dari penambahan komentar di tingkat server (POST ditolak).
+- **Validasi Input**: Validasi ketat via `express-validator` (isi komentar 1-1000 karakter, judul, status, query pencarian).
+- **Output Ter-escape**: Semua data dinamis pengguna ditampilkan menggunakan sintaks `<%= %>` pada view EJS (dengan CSS `white-space: pre-wrap` untuk newline).
+- **userId dari Session**: Nilai `created_by`, `assigned_to`, `diubah_oleh`, dan `user_id` komentar selalu diambil dari `req.session.user.id`.
+- **Flash Message**: Notifikasi aksi satu kali baca via `res.locals.flash`.
+
+## 8. Cara Menambah Fitur
+1. Query DB: Tambahkan fungsi query di `db/*.js` memakai `db.prepare(...)` dari `db/connection.js`.
+2. Middleware: Buat logika otorisasi di `middleware/*.js` jika diperlukan.
+3. Rute: Buat modul di `routes/*.js`, pasang middleware dan validasi `express-validator`, daftarkan via `app.use()` di `app.js`.
+4. Tampilan: Buat file `.ejs` di `views/` dengan layout partials, escaping `<%= %>`, dan styling Bootstrap 5.
 
 ## 9. Konvensi
 - Tanpa ORM; seluruh query SQL terisolasi di folder `db/` dengan parameter binding.
@@ -135,13 +144,14 @@ Request HTTP -> `express.static('public')` -> `express.urlencoded` & `express.js
 - Tahap 03 (Login, logout, session, role): Selesai.
 - Tahap 04 (Tiket Karyawan): Selesai.
 - Tahap 05 (Tiket untuk Helpdesk): Selesai.
-- **Tahap 06 (Komentar & Catatan Internal)**: Berikutnya.
+- Tahap 06 (Komentar & Catatan Internal): Selesai.
+- **Tahap 07 (Dashboard & Reporting Chart.js)**: Berikutnya.
 
 ## 11. Belum Ada
-- Fitur komentar pada tiket untuk karyawan dan helpdesk.
-- Catatan internal (`is_internal = 1`) khusus petugas helpdesk.
 - Laporan dan visualisasi grafik analitik tiket (Chart.js).
 - Manajemen pengguna dan kategori oleh admin (CRUD).
-- Filter pencarian lanjutan, paginasi daftar tiket, dan upload lampiran file.
+- Edit atau hapus komentar, serta lampiran file/gambar pada komentar.
+- Filter pencarian lanjutan dan paginasi daftar tiket.
+- Melepas/mengoper tiket ke petugas lain.
 - Proteksi CSRF token & rate limiting endpoint auth.
 - Penyimpanan session permanen di database.

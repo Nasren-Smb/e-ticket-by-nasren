@@ -3,6 +3,7 @@ const { body, validationResult } = require('express-validator');
 const { requireRole } = require('../middleware/auth');
 const { listAll: listCategories } = require('../db/categories');
 const { createTicket, listByUser, findByIdForUser } = require('../db/tickets');
+const { listPublicByTicket, create: createComment } = require('../db/comments');
 
 const router = express.Router();
 
@@ -115,9 +116,17 @@ router.post(
   }
 );
 
-// 4. GET /tickets/:id - Detail tiket milik sendiri
+// 4. GET /tickets/:id - Detail tiket milik sendiri beserta komentar publik
 router.get('/tickets/:id', requireRole('employee'), (req, res) => {
-  const ticketId = req.params.id;
+  const ticketId = parseInt(req.params.id, 10);
+
+  if (isNaN(ticketId) || ticketId <= 0) {
+    return res.status(404).render('404', {
+      title: 'Tiket Tidak Ditemukan',
+      message: 'ID tiket tidak valid.'
+    });
+  }
+
   const ticket = findByIdForUser(ticketId, req.session.user.id);
 
   // Jika tiket tidak ada atau bukan milik user, berikan status 404 (bukan 403) agar keberadaan tiket tidak bocor
@@ -128,10 +137,79 @@ router.get('/tickets/:id', requireRole('employee'), (req, res) => {
     });
   }
 
+  // Ambil hanya komentar publik untuk sisi employee
+  const comments = listPublicByTicket(ticketId);
+
   res.render('tickets/show', {
     title: `Detail Tiket ${ticket.kode}`,
-    ticket
+    ticket,
+    comments
   });
 });
+
+// 5. POST /tickets/:id/comments - Karyawan menambahkan komentar publik
+router.post(
+  '/tickets/:id/comments',
+  requireRole('employee'),
+  [
+    body('isi')
+      .trim()
+      .notEmpty()
+      .withMessage('Isi komentar wajib diisi.')
+      .isLength({ max: 1000 })
+      .withMessage('Komentar maksimal 1000 karakter.')
+  ],
+  (req, res) => {
+    const ticketId = parseInt(req.params.id, 10);
+
+    if (isNaN(ticketId) || ticketId <= 0) {
+      return res.status(404).render('404', {
+        title: 'Tiket Tidak Ditemukan',
+        message: 'ID tiket tidak valid.'
+      });
+    }
+
+    // Cek kepemilikan tiket
+    const ticket = findByIdForUser(ticketId, req.session.user.id);
+    if (!ticket) {
+      return res.status(404).render('404', {
+        title: 'Tiket Tidak Ditemukan',
+        message: 'Tiket yang Anda cari tidak ditemukan atau bukan milik Anda.'
+      });
+    }
+
+    // Tolak jika status tiket sudah Ditutup
+    if (ticket.status === 'Ditutup') {
+      req.session.flash = {
+        type: 'danger',
+        message: 'Tiket sudah ditutup, komentar tidak dapat ditambahkan.'
+      };
+      return res.redirect(`/tickets/${ticketId}`);
+    }
+
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      req.session.flash = {
+        type: 'danger',
+        message: errors.array()[0].msg
+      };
+      return res.redirect(`/tickets/${ticketId}`);
+    }
+
+    // Simpan komentar: user_id dari session, is_internal selalu 0
+    createComment({
+      ticketId,
+      userId: req.session.user.id,
+      isi: req.body.isi.trim(),
+      isInternal: 0
+    });
+
+    req.session.flash = {
+      type: 'success',
+      message: 'Komentar berhasil ditambahkan.'
+    };
+    res.redirect(`/tickets/${ticketId}`);
+  }
+);
 
 module.exports = router;
