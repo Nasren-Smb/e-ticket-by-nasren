@@ -11,5 +11,5 @@
 | 06 | Komentar & Catatan Internal | Selesai | [06-komentar.md](06-komentar.md) |
 | 07 | Dashboard & Reporting (Chart.js) | Selesai | [07-report.md](07-report.md) |
 | 08 | Admin: Kelola Pengguna & Kategori | Selesai | [08-admin.md](08-admin.md) |
-| 09 | Polish, Validasi & Testing Akhir | Belum dimulai | - |
+| 09 | Rapikan Kode, Dokumentasi & Evaluasi Menyeluruh | Sedang dikerjakan | [09-rapikan-evaluasi.md](09-rapikan-evaluasi.md) |
 
