@@ -6,11 +6,8 @@ const { createTicket, listByUser, findByIdForUser } = require('../db/tickets');
 
 const router = express.Router();
 
-// Semua rute tiket ini hanya boleh diakses oleh pengguna dengan peran 'employee'
-router.use(requireRole('employee'));
-
 // 1. GET /tickets - Daftar tiket milik pengguna login
-router.get('/tickets', (req, res) => {
+router.get('/tickets', requireRole('employee'), (req, res) => {
   const tickets = listByUser(req.session.user.id);
   res.render('tickets/index', {
     title: 'Tiket Saya',
@@ -19,7 +16,7 @@ router.get('/tickets', (req, res) => {
 });
 
 // 2. GET /tickets/new - Formulir pembuatan tiket baru (Diletakkan SEBELUM /tickets/:id)
-router.get('/tickets/new', (req, res) => {
+router.get('/tickets/new', requireRole('employee'), (req, res) => {
   const categories = listCategories();
   res.render('tickets/new', {
     title: 'Buat Tiket Baru',
@@ -37,6 +34,7 @@ router.get('/tickets/new', (req, res) => {
 // 3. POST /tickets - Memvalidasi dan menyimpan tiket baru
 router.post(
   '/tickets',
+  requireRole('employee'),
   [
     body('judul')
       .trim()
@@ -118,7 +116,7 @@ router.post(
 );
 
 // 4. GET /tickets/:id - Detail tiket milik sendiri
-router.get('/tickets/:id', (req, res) => {
+router.get('/tickets/:id', requireRole('employee'), (req, res) => {
   const ticketId = req.params.id;
   const ticket = findByIdForUser(ticketId, req.session.user.id);
 
@@ -137,4 +135,3 @@ router.get('/tickets/:id', (req, res) => {
 });
 
 module.exports = router;
-

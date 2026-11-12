@@ -8,6 +8,7 @@ const authRoutes = require('./routes/auth');
 const dashboardRoutes = require('./routes/dashboard');
 const adminRoutes = require('./routes/admin');
 const ticketRoutes = require('./routes/tickets');
+const helpdeskRoutes = require('./routes/helpdesk');
 
 // Inisialisasi aplikasi Express
 const app = express();
@@ -39,9 +40,13 @@ app.use(
   })
 );
 
-// Middleware agar variabel pengguna login tersedia di semua view template
+// Middleware flash message kecil & user session untuk view template
 app.use((req, res, next) => {
   res.locals.user = req.session && req.session.user ? req.session.user : null;
+  res.locals.flash = req.session && req.session.flash ? req.session.flash : null;
+  if (req.session) {
+    delete req.session.flash;
+  }
   next();
 });
 
@@ -56,6 +61,7 @@ app.get('/', (req, res) => {
 app.use(authRoutes);
 app.use(dashboardRoutes);
 app.use(adminRoutes);
+app.use(helpdeskRoutes);
 app.use(ticketRoutes);
 
 // Jalankan server

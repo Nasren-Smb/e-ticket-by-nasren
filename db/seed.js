@@ -58,6 +58,13 @@ try {
       role: 'helpdesk'
     },
     {
+      nama: 'Eko Helpdesk',
+      email: 'eko@perusahaan.local',
+      password_hash: passwordHash,
+      divisi: 'IT Support',
+      role: 'helpdesk'
+    },
+    {
       nama: 'Admin IT',
       email: 'admin@perusahaan.local',
       password_hash: passwordHash,
