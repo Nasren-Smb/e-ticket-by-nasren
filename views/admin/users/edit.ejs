@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %> - E-Ticket IT Helpdesk</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body class="d-flex flex-column min-vh-100 bg-light">
+
+  <%- include('../../partials/header') %>
+
+  <main class="container my-5 flex-grow-1">
+    <div class="row justify-content-center">
+      <div class="col-lg-8">
+        <nav aria-label="breadcrumb">
+          <ol class="breadcrumb mb-2">
+            <li class="breadcrumb-item"><a href="/admin" class="text-decoration-none">Admin</a></li>
+            <li class="breadcrumb-item"><a href="/admin/users" class="text-decoration-none">Pengguna</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Ubah Pengguna</li>
+          </ol>
+        </nav>
+
+        <% if (flash) { %>
+          <div class="alert alert-<%= flash.type === 'danger' ? 'danger' : 'success' %> alert-dismissible fade show shadow-sm mb-4" role="alert">
+            <i class="bi bi-<%= flash.type === 'danger' ? 'exclamation-triangle-fill' : 'check-circle-fill' %> me-2"></i>
+            <%= flash.message %>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+          </div>
+        <% } %>
+
+        <!-- Kartu 1: Edit Informasi Pengguna -->
+        <div class="card shadow-sm border-0 mb-4">
+          <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
+            <h5 class="fw-bold mb-0 text-dark">
+              <i class="bi bi-pencil-square text-primary me-2"></i>Ubah Informasi Pengguna
+            </h5>
+            <span class="badge bg-light text-dark border">ID #<%= targetUser.id %></span>
+          </div>
+          <div class="card-body p-4">
+            <form action="/admin/users/<%= targetUser.id %>" method="POST" novalidate>
+              <!-- Email (Read-Only) -->
+              <div class="mb-3">
+                <label for="email" class="form-label fw-semibold">Email Perusahaan</label>
+                <input
+                  type="email"
+                  class="form-control bg-light"
+                  id="email"
+                  value="<%= targetUser.email %>"
+                  readonly
+                  disabled
+                >
+                <div class="form-text">Alamat email pengguna bersifat permanen dan tidak dapat diubah.</div>
+              </div>
+
+              <!-- Nama -->
+              <div class="mb-3">
+                <label for="nama" class="form-label fw-semibold">Nama Lengkap <span class="text-danger">*</span></label>
+                <input
+                  type="text"
+                  class="form-control <%= errors.nama ? 'is-invalid' : '' %>"
+                  id="nama"
+                  name="nama"
+                  value="<%= formData.nama || '' %>"
+                  maxlength="100"
+                  required
+                >
+                <% if (errors.nama) { %>
+                  <div class="invalid-feedback"><%= errors.nama %></div>
+                <% } %>
+              </div>
+
+              <div class="row">
+                <!-- Divisi -->
+                <div class="col-md-6 mb-3">
+                  <label for="divisi" class="form-label fw-semibold">Divisi / Departemen</label>
+                  <input
+                    type="text"
+                    class="form-control <%= errors.divisi ? 'is-invalid' : '' %>"
+                    id="divisi"
+                    name="divisi"
+                    value="<%= formData.divisi || '' %>"
+                    maxlength="100"
+                  >
+                  <% if (errors.divisi) { %>
+                    <div class="invalid-feedback"><%= errors.divisi %></div>
+                  <% } %>
+                </div>
+
+                <!-- Peran (Role) -->
+                <div class="col-md-6 mb-3">
+                  <label for="role" class="form-label fw-semibold">Peran Sistem <span class="text-danger">*</span></label>
+                  <select class="form-select <%= errors.role ? 'is-invalid' : '' %>" id="role" name="role" required>
+                    <option value="employee" <%= formData.role === 'employee' ? 'selected' : '' %>>Employee (Karyawan)</option>
+                    <option value="helpdesk" <%= formData.role === 'helpdesk' ? 'selected' : '' %>>Helpdesk (Petugas IT)</option>
+                    <option value="admin" <%= formData.role === 'admin' ? 'selected' : '' %>>Admin (Administrator)</option>
+                  </select>
+                  <% if (errors.role) { %>
+                    <div class="invalid-feedback"><%= errors.role %></div>
+                  <% } %>
+                </div>
+              </div>
+
+              <div class="d-flex justify-content-between align-items-center mt-3">
+                <a href="/admin/users" class="btn btn-outline-secondary">
+                  <i class="bi bi-arrow-left me-1"></i> Kembali ke Daftar
+                </a>
+                <button type="submit" class="btn btn-primary fw-semibold px-4">
+                  <i class="bi bi-save me-1"></i> Simpan Perubahan
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <!-- Kartu 2: Form Reset Password Terpisah -->
+        <div class="card shadow-sm border-0 border-start border-4 border-warning">
+          <div class="card-header bg-white py-3 border-bottom">
+            <h5 class="fw-bold mb-0 text-dark">
+              <i class="bi bi-key-fill text-warning me-2"></i>Atur Ulang Password
+            </h5>
+          </div>
+          <div class="card-body p-4">
+            <p class="text-muted small mb-3">
+              Gunakan formulir ini jika pengguna lupa kata sandi atau membutuhkan kredensial baru. Password lama akan langsung digantikan.
+            </p>
+            <form action="/admin/users/<%= targetUser.id %>/password" method="POST" novalidate>
+              <div class="mb-3">
+                <label for="newPassword" class="form-label fw-semibold">Password Baru <span class="text-danger">*</span></label>
+                <input
+                  type="password"
+                  class="form-control <%= passwordErrors.newPassword ? 'is-invalid' : '' %>"
+                  id="newPassword"
+                  name="newPassword"
+                  placeholder="Minimal 8 karakter baru"
+                  maxlength="72"
+                  required
+                >
+                <div class="form-text">Password harus memiliki panjang 8 - 72 karakter.</div>
+                <% if (passwordErrors.newPassword) { %>
+                  <div class="invalid-feedback"><%= passwordErrors.newPassword %></div>
+                <% } %>
+              </div>
+
+              <div class="text-end">
+                <button type="submit" class="btn btn-warning fw-semibold px-4">
+                  <i class="bi bi-shield-lock me-1"></i> Perbarui Password
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </main>
+
+  <%- include('../../partials/footer') %>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
+
