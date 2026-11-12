@@ -21,6 +21,11 @@
                 <a class="nav-link" href="/tickets"><i class="bi bi-ticket-perforated me-1"></i>Tiket Saya</a>
               </li>
             <% } %>
+            <% if (user.role === 'helpdesk') { %>
+              <li class="nav-item">
+                <a class="nav-link" href="/helpdesk/tickets"><i class="bi bi-inboxes-fill me-1"></i>Semua Tiket</a>
+              </li>
+            <% } %>
             <% if (user.role === 'admin') { %>
               <li class="nav-item">
                 <a class="nav-link" href="/admin"><i class="bi bi-shield-lock me-1"></i>Admin</a>

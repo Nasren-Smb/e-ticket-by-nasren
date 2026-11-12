@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %></title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body class="d-flex flex-column min-vh-100 bg-light">
+
+  <%- include('../partials/header') %>
+
+  <main class="container my-5">
+    <!-- Pesan Flash -->
+    <% if (flash) { %>
+      <div class="alert alert-<%= flash.type %> alert-dismissible fade show shadow-sm" role="alert">
+        <% if (flash.type === 'success') { %>
+          <i class="bi bi-check-circle-fill me-2"></i>
+        <% } else { %>
+          <i class="bi bi-exclamation-triangle-fill me-2"></i>
+        <% } %>
+        <%= flash.message %>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+      </div>
+    <% } %>
+
+    <div class="d-flex align-items-center justify-content-between mb-4 flex-wrap gap-2">
+      <div class="d-flex align-items-center">
+        <a href="/helpdesk/tickets" class="btn btn-outline-secondary btn-sm me-3">
+          <i class="bi bi-arrow-left"></i> Kembali ke Antrean
+        </a>
+        <h3 class="fw-bold mb-0">Tiket <%= ticket.kode %></h3>
+      </div>
+      <div>
+        <% if (ticket.status === 'Baru') { %>
+          <span class="badge bg-primary fs-6 px-3 py-2">Status: Baru</span>
+        <% } else if (ticket.status === 'Diproses') { %>
+          <span class="badge bg-warning text-dark fs-6 px-3 py-2">Status: Diproses</span>
+        <% } else if (ticket.status === 'Selesai') { %>
+          <span class="badge bg-success fs-6 px-3 py-2">Status: Selesai</span>
+        <% } else { %>
+          <span class="badge bg-secondary fs-6 px-3 py-2">Status: Ditutup</span>
+        <% } %>
+      </div>
+    </div>
+
+    <div class="row g-4">
+      <!-- Kolom Kiri: Rincian Kendala & Riwayat Status -->
+      <div class="col-lg-8">
+        <!-- Rincian Tiket -->
+        <div class="card shadow-sm border-0 mb-4">
+          <div class="card-header bg-white py-3 border-bottom">
+            <h5 class="fw-bold mb-0 text-dark"><%= ticket.judul %></h5>
+          </div>
+          <div class="card-body p-4">
+            <h6 class="text-muted fw-semibold mb-2">Deskripsi Kendala dari Pelapor:</h6>
+            <div class="p-3 bg-light rounded-3 text-secondary" style="white-space: pre-wrap;"><%= ticket.deskripsi %></div>
+          </div>
+        </div>
+
+        <!-- Riwayat Perubahan Status -->
+        <div class="card shadow-sm border-0">
+          <div class="card-header bg-white py-3 border-bottom">
+            <h6 class="fw-bold mb-0 text-dark"><i class="bi bi-clock-history me-2 text-primary"></i>Riwayat Perubahan Status</h6>
+          </div>
+          <div class="card-body p-4">
+            <% if (!history || history.length === 0) { %>
+              <p class="text-muted small mb-0">Belum ada riwayat perubahan status pada tiket ini.</p>
+            <% } else { %>
+              <div class="timeline">
+                <ul class="list-group list-group-flush">
+                  <% history.forEach(item => { %>
+                    <li class="list-group-item px-0 py-3">
+                      <div class="d-flex justify-content-between align-items-center mb-1">
+                        <div>
+                          <span class="badge bg-light text-dark border me-1"><%= item.status_lama %></span>
+                          <i class="bi bi-arrow-right text-muted mx-1"></i>
+                          <span class="badge bg-primary me-2"><%= item.status_baru %></span>
+                          <span class="fw-semibold text-dark"><%= item.diubah_oleh_nama %></span>
+                          <small class="text-muted">(<%= item.diubah_oleh_role %>)</small>
+                        </div>
+                        <small class="text-muted">
+                          <%= new Date(item.created_at).toLocaleString('id-ID') %>
+                        </small>
+                      </div>
+                    </li>
+                  <% }) %>
+                </ul>
+              </div>
+            <% } %>
+          </div>
+        </div>
+      </div>
+
+      <!-- Kolom Kanan: Aksi Penanganan & Info Metadata -->
+      <div class="col-lg-4">
+        <!-- Kotak Aksi Helpdesk -->
+        <div class="card shadow-sm border-0 mb-4 border-start border-primary border-4">
+          <div class="card-header bg-white py-3 border-bottom">
+            <h6 class="fw-bold mb-0 text-primary"><i class="bi bi-gear-fill me-1"></i>Aksi Penanganan Tiket</h6>
+          </div>
+          <div class="card-body p-3">
+            <!-- Jika tiket belum diambil siapa pun -->
+            <% if (!ticket.assigned_to) { %>
+              <div class="text-center py-2">
+                <p class="text-muted small mb-3">Tiket ini belum memiliki penanggung jawab. Ambil tiket untuk mulai memproses.</p>
+                <form action="/helpdesk/tickets/<%= ticket.id %>/assign" method="POST">
+                  <button type="submit" class="btn btn-primary w-100">
+                    <i class="bi bi-hand-index-thumb me-1"></i> Ambil Tiket Ini
+                  </button>
+                </form>
+              </div>
+            <% } else if (ticket.assigned_to === user.id) { %>
+              <!-- Petugas tiket adalah user login -->
+              <div class="mb-2">
+                <span class="badge bg-success-subtle text-success p-2 w-100 text-center border border-success-subtle mb-3">
+                  <i class="bi bi-check-circle me-1"></i> Anda adalah penanggung jawab tiket ini
+                </span>
+
+                <% if (nextAllowedStatus && nextAllowedStatus.length > 0) { %>
+                  <form action="/helpdesk/tickets/<%= ticket.id %>/status" method="POST">
+                    <label for="status" class="form-label fw-semibold small">Ubah Status Tiket:</label>
+                    <select name="status" id="status" class="form-select mb-3" required>
+                      <% nextAllowedStatus.forEach(st => { %>
+                        <option value="<%= st %>"><%= st %></option>
+                      <% }) %>
+                    </select>
+                    <button type="submit" class="btn btn-primary w-100">
+                      <i class="bi bi-save me-1"></i> Simpan Status Baru
+                    </button>
+                  </form>
+                <% } else { %>
+                  <p class="text-muted small mb-0 text-center">
+                    <i class="bi bi-lock-fill me-1"></i> Tiket telah mencapai status akhir (<%= ticket.status %>) dan tidak dapat diubah lagi.
+                  </p>
+                <% } %>
+              </div>
+            <% } else { %>
+              <!-- Tiket sedang ditangani oleh petugas lain -->
+              <div class="p-2 text-center">
+                <i class="bi bi-person-lock fs-2 text-warning"></i>
+                <p class="text-muted small mt-2 mb-0">
+                  Tiket ini sedang ditangani oleh <strong><%= ticket.petugas_nama %></strong>. Anda tidak dapat mengubah status tiket ini.
+                </p>
+              </div>
+            <% } %>
+          </div>
+        </div>
+
+        <!-- Informasi Tiket -->
+        <div class="card shadow-sm border-0">
+          <div class="card-header bg-white py-3 border-bottom">
+            <h6 class="fw-bold mb-0 text-dark"><i class="bi bi-info-circle me-1"></i>Informasi Tiket</h6>
+          </div>
+          <div class="card-body p-3">
+            <ul class="list-group list-group-flush">
+              <li class="list-group-item d-flex justify-content-between px-0">
+                <span class="text-muted">Kode Tiket:</span>
+                <strong><%= ticket.kode %></strong>
+              </li>
+              <li class="list-group-item d-flex justify-content-between px-0">
+                <span class="text-muted">Kategori:</span>
+                <span class="badge bg-light text-dark border"><%= ticket.category_nama %></span>
+              </li>
+              <li class="list-group-item d-flex justify-content-between px-0">
+                <span class="text-muted">Prioritas:</span>
+                <% if (ticket.prioritas === 'Urgent') { %>
+                  <span class="badge bg-danger">Urgent</span>
+                <% } else if (ticket.prioritas === 'Tinggi') { %>
+                  <span class="badge bg-warning text-dark">Tinggi</span>
+                <% } else if (ticket.prioritas === 'Sedang') { %>
+                  <span class="badge bg-info text-dark">Sedang</span>
+                <% } else { %>
+                  <span class="badge bg-secondary">Rendah</span>
+                <% } %>
+              </li>
+              <li class="list-group-item d-flex justify-content-between px-0">
+                <span class="text-muted">Pelapor:</span>
+                <span><%= ticket.pembuat_nama %></span>
+              </li>
+              <li class="list-group-item d-flex justify-content-between px-0">
+                <span class="text-muted">Email Pelapor:</span>
+                <span class="small"><%= ticket.pembuat_email %></span>
+              </li>
+              <li class="list-group-item d-flex justify-content-between px-0">
+                <span class="text-muted">Divisi Pelapor:</span>
+                <span><%= ticket.pembuat_divisi %></span>
+              </li>
+              <li class="list-group-item d-flex justify-content-between px-0">
+                <span class="text-muted">Petugas:</span>
+                <% if (ticket.petugas_nama) { %>
+                  <span class="text-success fw-semibold"><%= ticket.petugas_nama %></span>
+                <% } else { %>
+                  <span class="text-muted fst-italic">Belum ada</span>
+                <% } %>
+              </li>
+              <li class="list-group-item d-flex justify-content-between px-0">
+                <span class="text-muted">Waktu Dibuat:</span>
+                <span class="small"><%= new Date(ticket.created_at).toLocaleString('id-ID') %></span>
+              </li>
+              <li class="list-group-item d-flex justify-content-between px-0">
+                <span class="text-muted">Terakhir Update:</span>
+                <span class="small"><%= new Date(ticket.updated_at).toLocaleString('id-ID') %></span>
+              </li>
+              <% if (ticket.closed_at) { %>
+                <li class="list-group-item d-flex justify-content-between px-0">
+                  <span class="text-muted">Waktu Ditutup:</span>
+                  <span class="small text-danger fw-semibold"><%= new Date(ticket.closed_at).toLocaleString('id-ID') %></span>
+                </li>
+              <% } %>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <%- include('../partials/footer') %>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
+
