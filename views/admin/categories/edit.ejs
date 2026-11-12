@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %> - E-Ticket IT Helpdesk</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body class="d-flex flex-column min-vh-100 bg-light">
+
+  <%- include('../../partials/header') %>
+
+  <main class="container my-5 flex-grow-1">
+    <div class="row justify-content-center">
+      <div class="col-lg-6">
+        <nav aria-label="breadcrumb">
+          <ol class="breadcrumb mb-2">
+            <li class="breadcrumb-item"><a href="/admin" class="text-decoration-none">Admin</a></li>
+            <li class="breadcrumb-item"><a href="/admin/categories" class="text-decoration-none">Kategori</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Ubah Nama</li>
+          </ol>
+        </nav>
+
+        <% if (flash) { %>
+          <div class="alert alert-<%= flash.type === 'danger' ? 'danger' : 'success' %> alert-dismissible fade show shadow-sm mb-4" role="alert">
+            <i class="bi bi-<%= flash.type === 'danger' ? 'exclamation-triangle-fill' : 'check-circle-fill' %> me-2"></i>
+            <%= flash.message %>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+          </div>
+        <% } %>
+
+        <div class="card shadow-sm border-0">
+          <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
+            <h5 class="fw-bold mb-0 text-dark">
+              <i class="bi bi-pencil-square text-success me-2"></i>Ganti Nama Kategori
+            </h5>
+            <span class="badge bg-light text-dark border">ID #<%= category.id %></span>
+          </div>
+          <div class="card-body p-4">
+            <form action="/admin/categories/<%= category.id %>" method="POST" novalidate>
+              <div class="mb-4">
+                <label for="nama" class="form-label fw-semibold">Nama Kategori <span class="text-danger">*</span></label>
+                <input
+                  type="text"
+                  class="form-control <%= errors.nama ? 'is-invalid' : '' %>"
+                  id="nama"
+                  name="nama"
+                  value="<%= formData.nama || '' %>"
+                  maxlength="50"
+                  required
+                >
+                <div class="form-text">Nama kategori maksimal 50 karakter dan harus unik.</div>
+                <% if (errors.nama) { %>
+                  <div class="invalid-feedback"><%= errors.nama %></div>
+                <% } %>
+              </div>
+
+              <div class="d-flex justify-content-between align-items-center">
+                <a href="/admin/categories" class="btn btn-outline-secondary">
+                  <i class="bi bi-arrow-left me-1"></i> Batal
+                </a>
+                <button type="submit" class="btn btn-success fw-semibold px-4">
+                  <i class="bi bi-save me-1"></i> Simpan Nama
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </main>
+
+  <%- include('../../partials/footer') %>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
+

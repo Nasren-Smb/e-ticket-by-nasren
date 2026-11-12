@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %> - E-Ticket IT Helpdesk</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body class="d-flex flex-column min-vh-100 bg-light">
+
+  <%- include('../../partials/header') %>
+
+  <main class="container my-5 flex-grow-1">
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+      <div>
+        <nav aria-label="breadcrumb">
+          <ol class="breadcrumb mb-1">
+            <li class="breadcrumb-item"><a href="/admin" class="text-decoration-none">Admin</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Kategori</li>
+          </ol>
+        </nav>
+        <h3 class="fw-bold mb-0"><i class="bi bi-tags-fill text-success me-2"></i>Kelola Kategori Tiket</h3>
+      </div>
+    </div>
+
+    <% if (flash) { %>
+      <div class="alert alert-<%= flash.type === 'danger' ? 'danger' : 'success' %> alert-dismissible fade show shadow-sm mb-4" role="alert">
+        <i class="bi bi-<%= flash.type === 'danger' ? 'exclamation-triangle-fill' : 'check-circle-fill' %> me-2"></i>
+        <%= flash.message %>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+      </div>
+    <% } %>
+
+    <!-- Form Tambah Kategori di Atas -->
+    <div class="card shadow-sm border-0 mb-4 border-start border-4 border-success">
+      <div class="card-body p-4">
+        <h5 class="fw-bold mb-3 text-dark"><i class="bi bi-plus-circle-fill text-success me-2"></i>Tambah Kategori Baru</h5>
+        <form action="/admin/categories" method="POST" class="row g-2 align-items-start" novalidate>
+          <div class="col-md-9">
+            <input
+              type="text"
+              class="form-control <%= errors.nama ? 'is-invalid' : '' %>"
+              name="nama"
+              placeholder="Masukkan nama kategori (contoh: Jaringan, Printer, Database)"
+              value="<%= formData.nama || '' %>"
+              maxlength="50"
+              required
+            >
+            <% if (errors.nama) { %>
+              <div class="invalid-feedback"><%= errors.nama %></div>
+            <% } %>
+          </div>
+          <div class="col-md-3">
+            <button type="submit" class="btn btn-success w-100 fw-semibold">
+              <i class="bi bi-plus-lg me-1"></i> Tambah Kategori
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Tabel Daftar Kategori -->
+    <div class="card shadow-sm border-0">
+      <div class="card-header bg-white py-3 border-bottom">
+        <h5 class="fw-bold mb-0 text-dark">Daftar Kategori Tersedia</h5>
+      </div>
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+              <tr>
+                <th class="ps-3">Nama Kategori</th>
+                <th class="text-center">Tiket Menggunakan</th>
+                <th class="text-end pe-3">Aksi</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% if (categories.length === 0) { %>
+                <tr>
+                  <td colspan="3" class="text-center py-4 text-muted">Belum ada kategori yang terdaftar.</td>
+                </tr>
+              <% } else { %>
+                <% categories.forEach(c => { %>
+                  <tr>
+                    <td class="ps-3">
+                      <span class="fw-semibold text-dark"><%= c.nama %></span>
+                    </td>
+                    <td class="text-center">
+                      <% if (c.ticket_count > 0) { %>
+                        <span class="badge bg-primary px-3 py-1"><%= c.ticket_count %> tiket</span>
+                      <% } else { %>
+                        <span class="badge bg-secondary-subtle text-secondary px-3 py-1">0 tiket</span>
+                      <% } %>
+                    </td>
+                    <td class="text-end pe-3">
+                      <div class="d-inline-flex gap-2">
+                        <a href="/admin/categories/<%= c.id %>/edit" class="btn btn-outline-primary btn-sm">
+                          <i class="bi bi-pencil-square me-1"></i> Ubah
+                        </a>
+                        <form
+                          action="/admin/categories/<%= c.id %>/delete"
+                          method="POST"
+                          class="d-inline"
+                          data-confirm="Apakah Anda yakin ingin menghapus kategori '<%= c.nama %>'? Tindakan ini tidak dapat dibatalkan."
+                        >
+                          <button
+                            type="submit"
+                            class="btn btn-outline-danger btn-sm"
+                            <%= c.ticket_count > 0 || categories.length <= 1 ? 'disabled title="Kategori sedang digunakan atau merupakan satu-satunya kategori"' : '' %>
+                          >
+                            <i class="bi bi-trash me-1"></i> Hapus
+                          </button>
+                        </form>
+                      </div>
+                    </td>
+                  </tr>
+                <% }) %>
+              <% } %>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <%- include('../../partials/footer') %>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="/js/admin.js"></script>
+</body>
+</html>
+
