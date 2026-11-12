@@ -13,6 +13,19 @@
   <%- include('../partials/header') %>
 
   <main class="container my-5">
+    <!-- Pesan Flash -->
+    <% if (flash) { %>
+      <div class="alert alert-<%= flash.type %> alert-dismissible fade show shadow-sm" role="alert">
+        <% if (flash.type === 'success') { %>
+          <i class="bi bi-check-circle-fill me-2"></i>
+        <% } else { %>
+          <i class="bi bi-exclamation-triangle-fill me-2"></i>
+        <% } %>
+        <%= flash.message %>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+      </div>
+    <% } %>
+
     <div class="d-flex align-items-center justify-content-between mb-4 flex-wrap gap-2">
       <div class="d-flex align-items-center">
         <a href="/tickets" class="btn btn-outline-secondary btn-sm me-3">
@@ -34,8 +47,9 @@
     </div>
 
     <div class="row g-4">
-      <!-- Kolom Kiri: Rincian Kendala -->
+      <!-- Kolom Kiri: Rincian Kendala & Percakapan Komentar -->
       <div class="col-lg-8">
+        <!-- Rincian Kendala -->
         <div class="card shadow-sm border-0 mb-4">
           <div class="card-header bg-white py-3 border-bottom">
             <h5 class="fw-bold mb-0 text-dark"><%= ticket.judul %></h5>
@@ -43,6 +57,68 @@
           <div class="card-body p-4">
             <h6 class="text-muted fw-semibold mb-2">Deskripsi Kendala:</h6>
             <div class="p-3 bg-light rounded-3 text-secondary" style="white-space: pre-wrap;"><%= ticket.deskripsi %></div>
+          </div>
+        </div>
+
+        <!-- Bagian Komentar Publik -->
+        <div class="card shadow-sm border-0 mb-4">
+          <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
+            <h6 class="fw-bold mb-0 text-dark"><i class="bi bi-chat-dots me-2 text-primary"></i>Percakapan & Komentar</h6>
+            <span class="badge bg-light text-dark border"><%= comments ? comments.length : 0 %> Balasan</span>
+          </div>
+          <div class="card-body p-4">
+            <% if (!comments || comments.length === 0) { %>
+              <p class="text-muted small mb-0">Belum ada komentar pada tiket ini.</p>
+            <% } else { %>
+              <div class="d-flex flex-column gap-3 mb-4">
+                <% comments.forEach(c => { %>
+                  <div class="p-3 rounded-3 border <%= c.penulis_role === 'helpdesk' ? 'bg-light border-primary-subtle' : 'bg-white' %>">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                      <div>
+                        <strong><%= c.penulis_nama %></strong>
+                        <span class="badge <%= c.penulis_role === 'helpdesk' ? 'bg-primary' : 'bg-secondary' %> ms-1 text-uppercase" style="font-size: 0.7rem;">
+                          <%= c.penulis_role %>
+                        </span>
+                      </div>
+                      <small class="text-muted">
+                        <%= new Date(c.created_at).toLocaleString('id-ID') %>
+                      </small>
+                    </div>
+                    <div class="text-secondary" style="white-space: pre-wrap;"><%= c.isi %></div>
+                  </div>
+                <% }) %>
+              </div>
+            <% } %>
+
+            <hr class="my-4">
+
+            <!-- Formulir Tambah Komentar -->
+            <% if (ticket.status === 'Ditutup') { %>
+              <div class="alert alert-secondary mb-0 py-2 text-center" role="alert">
+                <i class="bi bi-lock-fill me-1"></i> Tiket sudah ditutup, komentar tidak dapat ditambahkan.
+              </div>
+            <% } else { %>
+              <form action="/tickets/<%= ticket.id %>/comments" method="POST">
+                <div class="mb-3">
+                  <label for="isi" class="form-label fw-semibold small">Tulis Balasan / Pertanyaan Tambahan:</label>
+                  <textarea
+                    name="isi"
+                    id="isi"
+                    rows="3"
+                    class="form-control"
+                    placeholder="Tulis balasan atau penjelasan tambahan di sini..."
+                    maxlength="1000"
+                    required
+                  ></textarea>
+                  <div class="form-text">Maksimal 1000 karakter.</div>
+                </div>
+                <div class="d-flex justify-content-end">
+                  <button type="submit" class="btn btn-primary btn-sm px-3">
+                    <i class="bi bi-send me-1"></i> Kirim Komentar
+                  </button>
+                </div>
+              </form>
+            <% } %>
           </div>
         </div>
       </div>
@@ -103,4 +179,3 @@
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
-

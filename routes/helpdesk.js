@@ -1,5 +1,5 @@
 const express = require('express');
-const { query, validationResult } = require('express-validator');
+const { query, body, validationResult } = require('express-validator');
 const { requireRole } = require('../middleware/auth');
 const {
   ALLOWED_TRANSITIONS,
@@ -9,6 +9,7 @@ const {
   changeStatus
 } = require('../db/tickets');
 const { listByTicket } = require('../db/ticketHistory');
+const { listAllByTicket, create: createComment } = require('../db/comments');
 
 const router = express.Router();
 
@@ -47,7 +48,7 @@ router.get(
   }
 );
 
-// 2. GET /helpdesk/tickets/:id - Detail tiket bagi Helpdesk + Riwayat Status
+// 2. GET /helpdesk/tickets/:id - Detail tiket bagi Helpdesk + Riwayat Status + Komentar
 router.get('/helpdesk/tickets/:id', requireRole('helpdesk'), (req, res) => {
   const ticketId = parseInt(req.params.id, 10);
 
@@ -68,12 +69,14 @@ router.get('/helpdesk/tickets/:id', requireRole('helpdesk'), (req, res) => {
   }
 
   const history = listByTicket(ticketId);
+  const comments = listAllByTicket(ticketId);
   const nextAllowedStatus = ALLOWED_TRANSITIONS[ticket.status] || [];
 
   res.render('helpdesk/show', {
     title: `Detail Tiket ${ticket.kode} - IT Helpdesk`,
     ticket,
     history,
+    comments,
     nextAllowedStatus
   });
 });
@@ -122,5 +125,73 @@ router.post('/helpdesk/tickets/:id/status', requireRole('helpdesk'), (req, res) 
 
   res.redirect(`/helpdesk/tickets/${ticketId}`);
 });
+
+// 5. POST /helpdesk/tickets/:id/comments - Helpdesk menambah komentar publik atau catatan internal
+router.post(
+  '/helpdesk/tickets/:id/comments',
+  requireRole('helpdesk'),
+  [
+    body('isi')
+      .trim()
+      .notEmpty()
+      .withMessage('Isi komentar atau catatan wajib diisi.')
+      .isLength({ max: 1000 })
+      .withMessage('Komentar atau catatan maksimal 1000 karakter.')
+  ],
+  (req, res) => {
+    const ticketId = parseInt(req.params.id, 10);
+
+    if (isNaN(ticketId) || ticketId <= 0) {
+      return res.status(404).render('404', {
+        title: 'Tiket Tidak Ditemukan',
+        message: 'ID tiket tidak valid.'
+      });
+    }
+
+    const ticket = findById(ticketId);
+    if (!ticket) {
+      return res.status(404).render('404', {
+        title: 'Tiket Tidak Ditemukan',
+        message: 'Tiket yang Anda cari tidak ditemukan.'
+      });
+    }
+
+    // Tolak jika status tiket sudah Ditutup
+    if (ticket.status === 'Ditutup') {
+      req.session.flash = {
+        type: 'danger',
+        message: 'Tiket sudah ditutup, komentar atau catatan tidak dapat ditambahkan.'
+      };
+      return res.redirect(`/helpdesk/tickets/${ticketId}`);
+    }
+
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      req.session.flash = {
+        type: 'danger',
+        message: errors.array()[0].msg
+      };
+      return res.redirect(`/helpdesk/tickets/${ticketId}`);
+    }
+
+    const isInternal = req.body.is_internal === '1' || req.body.is_internal === 'on';
+
+    createComment({
+      ticketId,
+      userId: req.session.user.id,
+      isi: req.body.isi.trim(),
+      isInternal: isInternal ? 1 : 0
+    });
+
+    req.session.flash = {
+      type: 'success',
+      message: isInternal
+        ? 'Catatan internal berhasil disimpan (tidak terlihat oleh pelapor).'
+        : 'Balasan komentar publik berhasil dikirim.'
+    };
+
+    res.redirect(`/helpdesk/tickets/${ticketId}`);
+  }
+);
 
 module.exports = router;
