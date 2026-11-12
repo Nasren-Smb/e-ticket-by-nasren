@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { requireLogin, requireRole } = require('../middleware/auth');
+const { requireRole } = require('../middleware/auth');
 const reports = require('../db/reports');
 
 /**
@@ -8,7 +8,7 @@ const reports = require('../db/reports');
  * Menampilkan ringkasan metrik dan grafik laporan tiket
  * Hanya dapat diakses oleh peran 'helpdesk' dan 'admin'
  */
-router.get('/reports', requireLogin, requireRole('helpdesk', 'admin'), (req, res) => {
+router.get('/reports', requireRole('helpdesk', 'admin'), (req, res) => {
   const summary = reports.getSummary();
   const byStatus = reports.countByStatus();
   const byCategory = reports.countByCategory();
