@@ -1,57 +1,55 @@
 # Panduan Agent (AGENTS.md)
 
 ## UNTUK AI BARU (Wajib Dibaca Pertama Kali)
-1. **Urutan Membaca**: Baca `AGENTS.md` -> `docs/PROJECT_MAP.md` -> file issue tahap berikutnya di folder `issue/` (selalu periksa `issue/README.md` untuk mengetahui tahap aktif yang sedang berjalan).
-2. **Jangan Membaca Seluruh Repo**: BACA HANYA file yang diizinkan pada bagian "File yang BOLEH dibaca" di file issue tahap aktif. Jika membutuhkan file lain di luar izin, sebutkan nama file beserta alasannya secara eksplisit, lalu tanyakan kepada pengguna terlebih dahulu.
-3. **Jangan Mendahului**: Dilarang memulai pengerjaan atau menulis kode untuk tahap berikutnya sebelum diminta secara jelas oleh pengguna.
+1. **Urutan membaca**: `AGENTS.md` -> `docs/PROJECT_MAP.md` -> `issue/README.md` (cek tahap aktif) -> file issue tahap aktif di `issue/NN-nama.md`.
+2. **Jangan membaca seluruh repo.** Baca HANYA file yang tercantum di bagian "File yang BOLEH dibaca" pada file issue tahap aktif. Butuh file lain: sebutkan nama dan alasannya, lalu tanyakan dulu kepada pengguna.
+3. **Jangan mendahului.** Dilarang memulai tahap berikutnya sebelum diminta secara jelas.
+4. **Jika dokumen bertentangan dengan kode**, anggap kode yang benar, lalu laporkan perbedaannya.
+5. **Dilarang** membaca `node_modules/`, file `.db`, dan `package-lock.json`.
+
+Status tahap TIDAK ditulis di file ini. Lihat `docs/PROJECT_MAP.md` dan `issue/README.md`.
 
 ---
 
 ## Ringkasan Proyek
 - **Aplikasi**: Web Report E-Ticket IT Helpdesk (proyek belajar web pemula, semua tools gratis).
-- **Tech Stack**: Node.js, Express, EJS, Bootstrap 5 (CDN), SQLite (better-sqlite3), dotenv, bcrypt, express-session, express-validator.
-- **Rencana Tambahan**: Chart.js.
-- **Peran Pengguna**:
-  - `employee` (karyawan): membuat tiket, melihat tiket miliknya, membalas komentar.
-  - `helpdesk`: melihat semua tiket, memproses tiket, mengubah status, catatan internal.
-  - `admin`: mengelola pengguna dan kategori.
-- **Alur Status Tiket**: `Baru` -> `Diproses` -> `Selesai` -> `Ditutup`
+- **Tech stack**: Node.js, Express, EJS, Bootstrap 5 (CDN), Chart.js (CDN), SQLite (better-sqlite3), dotenv, bcrypt, express-session, express-validator, nodemon.
+- **Struktur**: folder utama (`app.js`, `routes/`, `views/`, `public/`, `middleware/`, `db/`, `issue/`, `docs/`). Tidak ada folder `src/`.
+- **Peran**: `employee` (membuat dan melihat tiket sendiri, membalas), `helpdesk` (memproses semua tiket, ubah status, catatan internal, report), `admin` (mengelola pengguna dan kategori, melihat report).
+- **Status tiket**: `Baru` -> `Diproses` -> `Selesai` -> `Ditutup` (aturan transisi lengkap ada di `docs/PROJECT_MAP.md`).
 
-## Protokol & Urutan Membaca File (Wajib)
-1. Baca `AGENTS.md` (panduan umum & aturan).
-2. Baca `docs/PROJECT_MAP.md` (peta file, rute, dan arsitektur aktif).
-3. Baca file issue tahap aktif di `issue/NN-nama.md`.
-4. BACA HANYA file yang tercantum di bagian "File yang BOLEH dibaca" pada issue tersebut.
-5. **Dilarang** membaca seluruh repo, `node_modules/`, file `.db`, atau `package-lock.json`.
-6. Jika membutuhkan file lain di luar izin: sebutkan nama file beserta alasannya, lalu tanyakan kepada user terlebih dahulu.
+## Aturan Kerja dan Kode
+- Kerjakan **HANYA satu tahap per permintaan**. Jangan ubah file di luar cakupan tahap aktif.
+- Tanpa framework frontend (pakai JavaScript biasa dan Bootstrap 5 CDN), tanpa ORM (SQL standar via better-sqlite3), tanpa TypeScript.
+- Semua query database hanya di folder `db/`, bukan di routes. Selalu pakai parameter binding, jangan menyambung string SQL.
+- **View baru**: tiru pola `views/helpdesk/index.ejs`. Tidak ada `partials/head.ejs`, jadi tiap view menulis `<head>` sendiri. Jangan membuat partial baru tanpa diminta.
+- Route `/x/new` diletakkan sebelum `/x/:id`. Daftarkan route baru di `app.js`.
+- Password di-hash dengan `bcrypt`. Rahasia di `.env` (acuan: `.env.example`).
+- Data pengguna yang ditampilkan selalu pakai `<%= %>` (ter-escape), tidak pernah `<%- %>`.
+- Identitas (`created_by`, `user_id`, `assigned_to`) selalu dari session, bukan dari form. Hak akses ditegakkan di server lewat `requireLogin` atau `requireRole`, bukan hanya dengan menyembunyikan tombol atau link.
+- Tulis kode sederhana dengan komentar singkat berbahasa Indonesia.
+- Ada hal yang tidak jelas: tanya, jangan menebak.
+- Ide di luar cakupan tahap dicatat di `issue/BACKLOG.md`, tidak dikerjakan.
 
-## Aturan Kerja & Kode
-- Kerjakan **HANYA satu tahap per permintaan**. Jangan melompat ke tahap berikutnya.
-- Jangan ubah file di luar cakupan tahap aktif.
-- Tanpa framework frontend (gunakan vanilla JS & Bootstrap 5 CDN) dan tanpa ORM (SQL standar via better-sqlite3).
-- Semua query database harus diletakkan di dalam folder `db/`.
-- Password wajib di-hash dengan `bcrypt`.
-- Nilai rahasia disimpan di `.env` (gunakan `.env.example` sebagai acuan).
-- Tulis kode sederhana dengan komentar singkat berbahasa Indonesia untuk pemula.
-- Semua data pengguna yang dirender ke tampilan wajib di-escape dengan `<%= %>` untuk mencegah XSS.
-- Jika ada hal yang tidak jelas: tanyakan kepada user, jangan menebak.
-- Ide atau fitur di luar cakupan tahap aktif dicatat di `issue/BACKLOG.md`.
+## Template File Issue
+Setiap tahap punya `issue/NN-nama.md`, dibuat SEBELUM menulis kode, dengan bagian: Status, Branch, Prasyarat, Hasil tahap sebelumnya, Tujuan, Cakupan, Di luar cakupan, File yang BOLEH dibaca, File yang akan dibuat/diubah, Checklist, Cara tes, Kriteria selesai, Catatan hasil, Evaluasi.
 
 ## Aturan Git (Ketat)
-- **Agent DILARANG menjalankan perintah git APA PUN** (`status`, `add`, `commit`, `push`, `diff`, `checkout`, dll.).
-- Seluruh operasi Git dikerjakan secara manual oleh user.
-- Agent hanya diperbolehkan menyarankan teks pesan commit.
+- **Agent DILARANG menjalankan perintah git APA PUN** (`status`, `add`, `commit`, `push`, `diff`, `checkout`, dan lainnya).
+- Seluruh operasi Git dikerjakan manual oleh pengguna.
+- Agent hanya boleh menyarankan teks pesan commit.
 
 ## Prosedur Selesai Pengerjaan
-1. Berikan ringkasan singkat: (1) file dibuat/diubah, (2) langkah tes manual, (3) saran pesan commit (hanya teks).
-2. **Berhenti** dan tunggu konfirmasi user.
-3. Setelah dikonfirmasi user: centang checklist tugas, isi Catatan hasil, ubah Status jadi `Selesai`, serta perbarui `issue/README.md` dan `docs/PROJECT_MAP.md`. Biarkan bagian Evaluasi diisi oleh user jika diminta.
-4. Jangan ubah file issue untuk tahap yang sudah berstatus `Selesai`.
+1. Berikan ringkasan singkat: (1) file dibuat/diubah, (2) langkah tes manual, (3) saran pesan commit (teks saja).
+2. **Berhenti** dan tunggu konfirmasi pengguna.
+3. Setelah dikonfirmasi: centang checklist, isi Catatan hasil, ubah Status menjadi `Selesai`, perbarui `issue/README.md` dan `docs/PROJECT_MAP.md` (peta file, tabel route, fungsi query, status tahap, bagian Belum ada).
+4. Bagian Evaluasi diisi oleh pengguna.
+5. Jangan ubah file issue untuk tahap yang sudah `Selesai`.
 
 ---
 
 ## CATATAN LINGKUNGAN
-- **Sistem Operasi**: Windows (menggunakan shell PowerShell). Berikan perintah atau path yang kompatibel dengan PowerShell.
-- **Port Server & Proses**: Server development menggunakan port 3000. DILARANG membiarkan server dev berjalan terus di latar belakang (background) setelah selesai tes; selalu hentikan proses setelah pengujian selesai untuk mencegah bentrok port (`EADDRINUSE`).
-- **Operasi Git**: Seluruh perintah Git dikerjakan manual oleh pengguna. Agent dilarang mengeksekusi git CLI dan hanya menyarankan teks commit message.
-- **Audiens**: Pengguna sedang belajar web development pemula. Berikan penjelasan yang ringkas dan jelas, kode yang terstruktur rapi, serta komentar penjelas berbahasa Indonesia yang mudah dipahami.
+- **Sistem operasi**: Windows (PowerShell). Berikan perintah dan path yang cocok untuk PowerShell.
+- **Server dev**: `npm run dev` (nodemon), port 3000. Jangan biarkan server hidup di latar belakang setelah tes. Hentikan setelah selesai untuk mencegah error `EADDRINUSE`.
+- **Hemat token**: jawaban singkat, jangan menampilkan isi file hasil, dan jangan membaca file di luar daftar izin.
+- **Pengguna sedang belajar**: jelaskan singkat dan jelas, kode terstruktur rapi, komentar bahasa Indonesia yang mudah dipahami.

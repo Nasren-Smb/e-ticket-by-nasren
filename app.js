@@ -9,6 +9,7 @@ const dashboardRoutes = require('./routes/dashboard');
 const adminRoutes = require('./routes/admin');
 const ticketRoutes = require('./routes/tickets');
 const helpdeskRoutes = require('./routes/helpdesk');
+const reportRoutes = require('./routes/reports');
 
 // Inisialisasi aplikasi Express
 const app = express();
@@ -63,6 +64,7 @@ app.use(dashboardRoutes);
 app.use(adminRoutes);
 app.use(helpdeskRoutes);
 app.use(ticketRoutes);
+app.use(reportRoutes);
 
 // Jalankan server
 app.listen(PORT, () => {

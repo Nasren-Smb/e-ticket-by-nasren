@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Report - E-Ticket</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+
+<body class="d-flex flex-column min-vh-100 bg-light">
+  <%- include('../partials/header') %>
+
+    <main class="container my-4 flex-grow-1">
+      <!-- Judul & Breadcrumb -->
+      <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+          <h2 class="fw-bold mb-1"><i class="bi bi-bar-chart-line-fill text-primary me-2"></i>Laporan & Analisis Tiket
+          </h2>
+          <p class="text-muted mb-0">Pantau performa helpdesk, distribusi beban kerja, dan ringkasan tiket secara
+            real-time.</p>
+        </div>
+        <div>
+          <span class="badge bg-secondary p-2"><i class="bi bi-clock-history me-1"></i>Data Real-time</span>
+        </div>
+      </div>
+
+      <% if (summary.total===0) { %>
+        <!-- Alert Jika Belum Ada Data -->
+        <div class="alert alert-info py-5 text-center shadow-sm" role="alert">
+          <i class="bi bi-inbox display-4 text-primary d-block mb-3"></i>
+          <h4 class="alert-heading fw-bold">Belum Ada Data Tiket</h4>
+          <p class="text-muted mb-3">Sistem belum memiliki catatan tiket. Silakan tambahkan data tiket atau jalankan
+            seed demo untuk melihat grafik.</p>
+          <code>npm run db:seed-demo</code>
+        </div>
+        <% } else { %>
+          <!-- 1. Kartu Ringkasan Metrik (KPI) -->
+          <div class="row g-3 mb-4">
+            <div class="col-6 col-md-4 col-xl-2">
+              <div class="card border-0 shadow-sm text-center py-3 h-100 border-start border-4 border-primary">
+                <div class="card-body p-2">
+                  <span class="text-muted small fw-semibold">TOTAL TIKET</span>
+                  <h3 class="fw-bold text-dark mt-2 mb-0">
+                    <%= summary.total %>
+                  </h3>
+                </div>
+              </div>
+            </div>
+            <div class="col-6 col-md-4 col-xl-2">
+              <div class="card border-0 shadow-sm text-center py-3 h-100 border-start border-4 border-info">
+                <div class="card-body p-2">
+                  <span class="text-muted small fw-semibold">TIKET BARU</span>
+                  <h3 class="fw-bold text-info mt-2 mb-0">
+                    <%= summary.baru %>
+                  </h3>
+                </div>
+              </div>
+            </div>
+            <div class="col-6 col-md-4 col-xl-2">
+              <div class="card border-0 shadow-sm text-center py-3 h-100 border-start border-4 border-warning">
+                <div class="card-body p-2">
+                  <span class="text-muted small fw-semibold">DIPROSES</span>
+                  <h3 class="fw-bold text-warning mt-2 mb-0">
+                    <%= summary.diproses %>
+                  </h3>
+                </div>
+              </div>
+            </div>
+            <div class="col-6 col-md-4 col-xl-2">
+              <div class="card border-0 shadow-sm text-center py-3 h-100 border-start border-4 border-success">
+                <div class="card-body p-2">
+                  <span class="text-muted small fw-semibold">SELESAI</span>
+                  <h3 class="fw-bold text-success mt-2 mb-0">
+                    <%= summary.selesai %>
+                  </h3>
+                </div>
+              </div>
+            </div>
+            <div class="col-6 col-md-4 col-xl-2">
+              <div class="card border-0 shadow-sm text-center py-3 h-100 border-start border-4 border-secondary">
+                <div class="card-body p-2">
+                  <span class="text-muted small fw-semibold">DITUTUP</span>
+                  <h3 class="fw-bold text-secondary mt-2 mb-0">
+                    <%= summary.ditutup %>
+                  </h3>
+                </div>
+              </div>
+            </div>
+            <div class="col-6 col-md-4 col-xl-2">
+              <div class="card border-0 shadow-sm text-center py-3 h-100 border-start border-4 border-dark">
+                <div class="card-body p-2">
+                  <span class="text-muted small fw-semibold">RATA PENYELESAIAN</span>
+                  <h3 class="fw-bold text-dark mt-2 mb-0">
+                    <%= summary.avgResolutionHours %><span class="fs-6 fw-normal text-muted ms-1">jam</span>
+                  </h3>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 2. Bagian Grafik Visualisasi Chart.js -->
+          <div class="row g-4 mb-4">
+            <!-- Grafik Distribusi Status Tiket -->
+            <div class="col-lg-4">
+              <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-white py-3 border-0">
+                  <h6 class="fw-bold mb-0 text-dark"><i class="bi bi-pie-chart-fill text-primary me-2"></i>Status Tiket
+                  </h6>
+                </div>
+                <div class="card-body">
+                  <div style="height: 260px; position: relative;">
+                    <canvas id="statusChart" data-labels="<%= JSON.stringify(chartData.statusLabels) %>"
+                      data-values="<%= JSON.stringify(chartData.statusValues) %>">
+                    </canvas>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Grafik Tiket per Kategori -->
+            <div class="col-lg-4">
+              <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-white py-3 border-0">
+                  <h6 class="fw-bold mb-0 text-dark"><i class="bi bi-tags-fill text-primary me-2"></i>Tiket per Kategori
+                  </h6>
+                </div>
+                <div class="card-body">
+                  <div style="height: 260px; position: relative;">
+                    <canvas id="categoryChart" data-labels="<%= JSON.stringify(chartData.categoryLabels) %>"
+                      data-values="<%= JSON.stringify(chartData.categoryValues) %>">
+                    </canvas>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Grafik Tren 12 Bulan Terakhir -->
+            <div class="col-lg-4">
+              <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-white py-3 border-0">
+                  <h6 class="fw-bold mb-0 text-dark"><i class="bi bi-graph-up text-primary me-2"></i>Tren Tiket (12
+                    Bulan)</h6>
+                </div>
+                <div class="card-body">
+                  <div style="height: 260px; position: relative;">
+                    <canvas id="monthChart" data-labels="<%= JSON.stringify(chartData.monthLabels) %>"
+                      data-values="<%= JSON.stringify(chartData.monthValues) %>">
+                    </canvas>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 3. Tabel Beban Kerja Petugas Helpdesk -->
+          <div class="row g-4 mb-4">
+            <div class="col-lg-6">
+              <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-white py-3 border-0 d-flex justify-content-between align-items-center">
+                  <h6 class="fw-bold mb-0 text-dark"><i class="bi bi-person-badge-fill text-primary me-2"></i>Beban
+                    Kerja Petugas Helpdesk</h6>
+                </div>
+                <div class="card-body p-0">
+                  <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                      <thead class="table-light">
+                        <tr>
+                          <th class="ps-3">Nama Petugas</th>
+                          <th class="text-center">Diproses</th>
+                          <th class="text-center">Selesai</th>
+                          <th class="text-center">Ditutup</th>
+                          <th class="text-center pe-3">Total Ditangani</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <% if (workloads.length===0) { %>
+                          <tr>
+                            <td colspan="5" class="text-center py-4 text-muted">Belum ada data staf helpdesk.</td>
+                          </tr>
+                          <% } else { %>
+                            <% workloads.forEach(w=> { %>
+                              <tr>
+                                <td class="ps-3 fw-semibold">
+                                  <%= w.agent_name %>
+                                </td>
+                                <td class="text-center"><span class="badge bg-warning text-dark">
+                                    <%= w.diproses %>
+                                  </span></td>
+                                <td class="text-center"><span class="badge bg-success">
+                                    <%= w.selesai %>
+                                  </span></td>
+                                <td class="text-center"><span class="badge bg-secondary">
+                                    <%= w.ditutup %>
+                                  </span></td>
+                                <td class="text-center pe-3 fw-bold">
+                                  <%= w.total_handled %>
+                                </td>
+                              </tr>
+                              <% }) %>
+                                <% } %>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 4. Tabel Tiket Lama Belum Selesai (> 7 Hari) -->
+            <div class="col-lg-6">
+              <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-white py-3 border-0 d-flex justify-content-between align-items-center">
+                  <h6 class="fw-bold mb-0 text-dark">
+                    <i class="bi bi-exclamation-triangle-fill text-danger me-2"></i>Tiket Lama Belum Selesai (> 7 Hari)
+                  </h6>
+                  <span class="badge bg-danger">
+                    <%= staleTickets.length %> Tiket
+                  </span>
+                </div>
+                <div class="card-body p-0">
+                  <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                      <thead class="table-light">
+                        <tr>
+                          <th class="ps-3">Kode</th>
+                          <th>Judul</th>
+                          <th>Kategori</th>
+                          <th class="text-center">Status</th>
+                          <th class="text-center pe-3">Umur</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <% if (staleTickets.length===0) { %>
+                          <tr>
+                            <td colspan="5" class="text-center py-4 text-success">
+                              <i class="bi bi-check-circle-fill me-1"></i>Hebat! Tidak ada tiket lama yang menggantung
+                              lebih dari 7 hari.
+                            </td>
+                          </tr>
+                          <% } else { %>
+                            <% staleTickets.forEach(t=> { %>
+                              <tr>
+                                <td class="ps-3">
+                                  <% if (user.role==='helpdesk' ) { %>
+                                    <a href="/helpdesk/tickets/<%= t.id %>" class="fw-bold text-decoration-none">
+                                      <%= t.kode %>
+                                    </a>
+                                    <% } else { %>
+                                      <span class="fw-bold text-dark">
+                                        <%= t.kode %>
+                                      </span>
+                                      <% } %>
+                                </td>
+                                <td>
+                                  <div class="text-truncate" style="max-width: 180px;" title="<%= t.judul %>">
+                                    <%= t.judul %>
+                                  </div>
+                                </td>
+                                <td><span class="badge bg-light text-dark border">
+                                    <%= t.category_name %>
+                                  </span></td>
+                                <td class="text-center">
+                                  <% if (t.status==='Baru' ) { %>
+                                    <span class="badge bg-primary">Baru</span>
+                                    <% } else if (t.status==='Diproses' ) { %>
+                                      <span class="badge bg-warning text-dark">Diproses</span>
+                                      <% } %>
+                                </td>
+                                <td class="text-center pe-3">
+                                  <span class="badge bg-danger-subtle text-danger border border-danger">
+                                    <%= t.age_days %> hari
+                                  </span>
+                                </td>
+                              </tr>
+                              <% }) %>
+                                <% } %>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <% } %>
+    </main>
+
+    <%- include('../partials/footer') %>
+
+      <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+      <!-- Chart.js versi dipin, hanya di halaman report -->
+      <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+      <!-- Membaca data dari atribut canvas lalu menggambar grafik -->
+      <script src="/js/report.js"></script>
+</body>
+
+</html>

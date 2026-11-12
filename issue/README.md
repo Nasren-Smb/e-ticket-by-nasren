@@ -9,6 +9,6 @@
 | 04 | Tiket Karyawan (Buat & Lihat Tiket) | Selesai | [04-tiket-karyawan.md](04-tiket-karyawan.md) |
 | 05 | Alur Proses Helpdesk & Status | Selesai | [05-helpdesk-tiket.md](05-helpdesk-tiket.md) |
 | 06 | Komentar & Catatan Internal | Selesai | [06-komentar.md](06-komentar.md) |
-| 07 | Dashboard & Reporting (Chart.js) | Belum dimulai | - |
+| 07 | Dashboard & Reporting (Chart.js) | Selesai | [07-report.md](07-report.md) |
 | 08 | Polish, Validasi & Testing Akhir | Belum dimulai | - |
 
